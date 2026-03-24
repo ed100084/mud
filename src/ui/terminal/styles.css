@@ -153,7 +153,7 @@ html, body, #app {
 #context-panel {
   background: var(--bg2);
   border-top: 1px solid var(--border);
-  max-height: 42vh;
+  max-height: 48vh;
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -649,6 +649,128 @@ html, body, #app {
   background: #252525;
   border-color: var(--green);
   transform: scale(0.98);
+}
+
+/* ── Dungeon / Zone Cards ──────────────────────── */
+.dungeon-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.dungeon-card.locked {
+  opacity: 0.5;
+}
+.dungeon-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.dungeon-card-name {
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: bold;
+}
+.dungeon-card.locked .dungeon-card-name {
+  color: var(--text-dim);
+}
+.dungeon-card-desc {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.dungeon-card-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.dungeon-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.dungeon-req {
+  font-size: 12px;
+  color: var(--green);
+}
+.dungeon-req.locked {
+  color: var(--text-dim);
+}
+
+/* ── Zone Area Buttons ─────────────────────────── */
+.zone-areas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.zone-area-btn {
+  min-height: 40px !important;
+  font-size: 12px !important;
+  background: #0a1a1f !important;
+  border-color: #1a4d55 !important;
+  color: var(--cyan) !important;
+}
+
+/* ── Shop Item Row ─────────────────────────────── */
+.shop-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+.shop-item-info {
+  flex: 1;
+}
+.shop-item-name {
+  font-size: 13px;
+  color: var(--text);
+}
+.shop-item-price {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 2px;
+}
+
+/* ── Rebirth Danger / Cancel ───────────────────── */
+.rebirth-big-btn.danger-pulse {
+  background: #1f0505;
+  border-color: var(--red);
+  color: var(--red);
+  animation: pulse-border 1s ease-in-out infinite;
+}
+.rebirth-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 12px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.rebirth-cancel-btn:active { background: #252525; }
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--red); box-shadow: none; }
+  50% { border-color: #ff8888; box-shadow: 0 0 8px rgba(255,68,68,0.4); }
 }
 
 /* ── Animations ────────────────────────────────── */

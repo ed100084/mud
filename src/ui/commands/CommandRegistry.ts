@@ -177,8 +177,9 @@ registerCommand('explore', {
       const zoneId = args[0]
         || (p.location.type === 'adventure' ? p.location.id : null)
         || 'starting_plains'
+      const areaId = args[1]
       p.location = { type: 'adventure', id: zoneId }
-      exploreArea(p, zoneId)
+      exploreArea(p, zoneId, areaId)
     })
   }
 })
