@@ -98,13 +98,14 @@ export const PRESTIGE_NODES: Record<string, PrestigeBonusNode> = {
 }
 
 export const PRESTIGE_MILESTONES: PrestigeMilestone[] = [
-  { rebirthCount: 1, title: '第一次重生', description: '你踏上了無盡輪迴的道路。', rewards: ['解鎖重生樹 Tier 1'], unlocksFeature: 'prestige_tree_t1' },
-  { rebirthCount: 5, title: '五次輪迴', description: '你開始掌握重生的節奏。', rewards: ['解鎖重生樹 Tier 2', '解鎖自動戰鬥'], unlocksFeature: 'auto_combat' },
-  { rebirthCount: 10, title: '十重天', description: '每一次重生讓你更加強大。', rewards: ['解鎖「琥珀」終端機主題', '離線進度提升至 60%'], unlocksFeature: 'theme_amber' },
-  { rebirthCount: 20, title: '超越凡境', description: '你的力量已超越普通冒險者的想像。', rewards: ['解鎖重生樹 Tier 3'], unlocksFeature: 'prestige_tree_t3' },
-  { rebirthCount: 50, title: '半不死身', description: '你已無懼死亡，將重生視為另一次機會。', rewards: ['離線進度提升至 75%', '解鎖 Roguelike 挑戰模式'], unlocksFeature: 'roguelike_mode' },
-  { rebirthCount: 100, title: '永恆輪迴者', description: '百次輪迴，你已觸及永恆的邊界。', rewards: ['解鎖重生樹 Tier 4', '解鎖超越職業'], unlocksFeature: 'prestige_tree_t4' },
-  { rebirthCount: 250, title: '傳說', description: '你的名字已成為傳說。', rewards: ['解鎖「白光」終端機主題', '所有商店 10% 折扣'], unlocksFeature: 'theme_white' },
-  { rebirthCount: 500, title: '神話', description: '超越傳說，進入神話的領域。', rewards: ['離線進度提升至 90%'], unlocksFeature: 'offline_90' },
-  { rebirthCount: 1000, title: '永恆之神', description: '你已超越所有限制，成為這個世界的一部分。', rewards: ['解鎖隱藏結局'], unlocksFeature: 'true_ending' },
+  { rebirthCount: 1,    title: '第一次重生',   description: '你踏上了無盡輪迴的道路。',             rewards: ['解鎖重生樹 Tier 1'],                    unlocksFeature: 'prestige_tree_t1' },
+  { rebirthCount: 5,    title: '五次輪迴',     description: '你開始掌握重生的節奏。',               rewards: ['解鎖重生樹 Tier 2', '解鎖自動戰鬥'],      unlocksFeature: 'auto_combat' },
+  { rebirthCount: 10,   title: '十重天',       description: '每一次重生讓你更加強大。',              rewards: ['解鎖自動探索循環', '離線進度提升至 60%'],  unlocksFeature: 'auto_explore' },
+  { rebirthCount: 15,   title: '輪迴老手',     description: '重生已成為你的日常，節奏越來越快。',    rewards: ['解鎖自動出售低稀有度裝備'],               unlocksFeature: 'auto_sell' },
+  { rebirthCount: 20,   title: '超越凡境',     description: '你的力量已超越普通冒險者的想像。',      rewards: ['解鎖重生樹 Tier 3', '解鎖自動裝備'],       unlocksFeature: 'prestige_tree_t3' },
+  { rebirthCount: 50,   title: '半不死身',     description: '你已無懼死亡，將重生視為另一次機會。',  rewards: ['離線進度提升至 75%'],                     unlocksFeature: 'offline_rate_75' },
+  { rebirthCount: 100,  title: '永恆輪迴者',   description: '百次輪迴，你已觸及永恆的邊界。',        rewards: ['解鎖重生樹 Tier 4', '離線進度提升至 90%'], unlocksFeature: 'prestige_tree_t4' },
+  { rebirthCount: 250,  title: '傳說',         description: '你的名字已成為傳說。',                 rewards: ['所有商店 10% 折扣'],                      unlocksFeature: 'shop_discount' },
+  { rebirthCount: 500,  title: '神話',         description: '超越傳說，進入神話的領域。',            rewards: ['完全 AFK 模式（不需開啟瀏覽器）'],         unlocksFeature: 'afk_mode' },
+  { rebirthCount: 1000, title: '永恆之神',     description: '你已超越所有限制，成為這個世界的一部分。', rewards: ['解鎖隱藏結局'],                        unlocksFeature: 'true_ending' },
 ]

@@ -152,6 +152,9 @@ export function exploreArea(player: PlayerState, zoneId: string, areaId?: string
     return
   }
 
+  // 記錄當前探索區域（供自動探索循環使用）
+  player.flags['current_zone'] = zoneId
+
   const area = areaId
     ? zone.areas.find(a => a.id === areaId) ?? zone.areas[0]
     : zone.areas[globalRng.int(zone.areas.length)]

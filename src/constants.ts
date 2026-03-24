@@ -18,6 +18,10 @@ export const PRESTIGE_UNLOCK_BASE_LEVEL = 50
 export const PRESTIGE_UNLOCK_SCALE = 1.3
 export const SOUL_FRAGMENT_EXPONENT = 0.5
 
+// ── 放置 / 自動化 ─────────────────────────────────────
+export const AUTO_COMBAT_DELAY_MS = 800   // 自動戰鬥每次行動延遲
+export const AUTO_EXPLORE_DELAY_MS = 1500 // 自動探索戰鬥結束後延遲
+
 // ── 戰鬥 ────────────────────────────────────────────
 export const CRIT_BASE_CHANCE = 0.05
 export const CRIT_BASE_MULTIPLIER = new Decimal('2.0')

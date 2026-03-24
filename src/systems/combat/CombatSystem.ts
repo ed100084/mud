@@ -5,6 +5,7 @@ import { log } from '../../core/logger'
 import { globalRng } from '../../core/rng'
 import { scaleMonsterStat } from '../../core/formula'
 import { resolveAttack } from './CombatFormulas'
+import { AUTO_COMBAT_DELAY_MS } from '../../constants'
 import type { CombatState, CombatUnit } from '../../types'
 import type { PlayerState } from '../../types'
 import type { MonsterTemplate } from '../../types'
@@ -109,7 +110,11 @@ export function startCombat(
     log.combat(`  ${marker}${e.name}  HP:${fmtFull(e.currentHP)}`)
   }
   log.separator()
-  if (!activeCombat.isPlayerTurn) setTimeout(() => processEnemyTurns(player), 400)
+  if (!activeCombat.isPlayerTurn) {
+    setTimeout(() => processEnemyTurns(player), 400)
+  } else {
+    maybeAutoAct(player)
+  }
 }
 
 function getCurrentUnit(combat: CombatState): CombatUnit | undefined {
@@ -152,7 +157,14 @@ export function playerAttack(player: PlayerState): boolean {
     bus.emit('combat:damage', { actorId: 'player', targetId: target.unitId, amount: result.amount.toString(), isCrit: result.isCrit })
   }
   checkCombatEnd(player, combat)
-  if (combat.isActive) { advanceTurn(combat); if (!combat.isPlayerTurn) setTimeout(() => processEnemyTurns(player), 300) }
+  if (combat.isActive) {
+    advanceTurn(combat)
+    if (!combat.isPlayerTurn) {
+      setTimeout(() => processEnemyTurns(player), 300)
+    } else {
+      maybeAutoAct(player)
+    }
+  }
   return true
 }
 
@@ -164,7 +176,11 @@ export function playerDefend(player: PlayerState): boolean {
   pu.isDefending = true
   log.combat(`  ${player.name} 採取防禦姿態！（受傷減少 30%）`)
   advanceTurn(combat)
-  if (!combat.isPlayerTurn) setTimeout(() => processEnemyTurns(player), 300)
+  if (!combat.isPlayerTurn) {
+    setTimeout(() => processEnemyTurns(player), 300)
+  } else {
+    maybeAutoAct(player)
+  }
   return true
 }
 
@@ -185,6 +201,24 @@ export function playerFlee(player: PlayerState): boolean {
   advanceTurn(combat)
   if (!combat.isPlayerTurn) setTimeout(() => processEnemyTurns(player), 300)
   return false
+}
+
+// 自動戰鬥：若已解鎖且未暫停，自動執行玩家策略
+function maybeAutoAct(player: PlayerState): void {
+  if (!player.flags['unlock_auto_combat']) return
+  if (player.flags['auto_combat'] === false) return  // 玩家手動關閉
+  const strategy = (player.flags['auto_combat_strategy'] as string) ?? 'attack'
+  setTimeout(() => {
+    const combat = activeCombat
+    if (!combat?.isActive || !combat.isPlayerTurn) return
+    const pu = combat.allies.find(u => u.isPlayer)
+    const hpPct = pu && pu.maxHP.gt(0) ? pu.currentHP.div(pu.maxHP).toNumber() : 1
+    if (strategy === 'defend_low_hp' && hpPct < 0.3) {
+      playerDefend(player)
+    } else {
+      playerAttack(player)
+    }
+  }, AUTO_COMBAT_DELAY_MS)
 }
 
 // 敵人 AI
@@ -209,7 +243,14 @@ function processEnemyTurns(player: PlayerState): void {
     if (target.isPlayer) player.currentHP = target.currentHP.plus(0)
   }
   checkCombatEnd(player, combat)
-  if (combat.isActive) { advanceTurn(combat); if (!combat.isPlayerTurn) setTimeout(() => processEnemyTurns(player), 250) }
+  if (combat.isActive) {
+    advanceTurn(combat)
+    if (!combat.isPlayerTurn) {
+      setTimeout(() => processEnemyTurns(player), 250)
+    } else {
+      maybeAutoAct(player)
+    }
+  }
 }
 
 function checkCombatEnd(player: PlayerState, combat: CombatState): void {

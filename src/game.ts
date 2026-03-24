@@ -8,9 +8,10 @@ import { createPlayer } from './systems/player/PlayerSystem'
 import { recalcStats } from './systems/player/StatsSystem'
 import { getEquippedItems } from './systems/equipment/EquipmentSystem'
 import { saveGame, loadGame, startAutoSave } from './save/SaveManager'
-import { OFFLINE_PROGRESS_RATE, OFFLINE_MAX_HOURS } from './constants'
+import { OFFLINE_MAX_HOURS, AUTO_EXPLORE_DELAY_MS } from './constants'
 import { D, fmt, fmtFull, toDecimal } from './core/bignum'
 import { updateQuestProgress } from './systems/npc/QuestSystem'
+import { getOfflineRate, getPrestigeXpMultiplier, getPrestigeGoldMultiplier } from './systems/prestige/PrestigeSystem'
 import type { PlayerState, StatBlock } from './types'
 
 // 修復舊存檔或 HMR 後 Decimal 變成普通字串/數字的問題
@@ -72,11 +73,19 @@ export class GameEngine {
     // 監聽 tick 事件
     bus.on('tick', ({ tick }) => this.onTick(tick))
 
-    // 監聽戰鬥事件
+    // 監聽戰鬥事件：自動探索循環
     bus.on('combat:end', ({ victory }) => {
-      if (victory) {
-        // CombatSystem 的 endCombat 發出，這裡可以做額外處理
-      }
+      if (!victory) return
+      if (!this.player.flags['unlock_auto_explore']) return
+      if (this.player.flags['auto_explore'] === false) return
+      const zoneId = this.player.flags['current_zone'] as string | undefined
+      if (!zoneId) return
+      setTimeout(() => {
+        import('./systems/adventure/AdventureSystem').then(({ exploreArea }) => {
+          exploreArea(this.player, zoneId)
+          setTimeout(() => this.uiManager.refresh(), 100)
+        })
+      }, AUTO_EXPLORE_DELAY_MS)
     })
 
     // 啟動自動存檔
@@ -119,19 +128,30 @@ export class GameEngine {
     const minutes = Math.floor((actual % 3600) / 60)
     const timeStr = hours > 0 ? `${hours} 小時 ${minutes} 分鐘` : `${minutes} 分鐘`
 
-    log.separator()
-    log.story(`歡迎回來！你離線了 ${timeStr}。`)
+    // 動態離線效率（根據里程碑）
+    const offlineRate = getOfflineRate(this.player)
+    const xpMult = getPrestigeXpMultiplier(this.player)
+    const goldMult = getPrestigeGoldMultiplier(this.player)
 
-    // 離線 XP（簡化：每秒給少量 XP）
-    const xpPerSecond = this.player.currentStats.atk.times(0.1)
-    const totalXp = xpPerSecond.times(actual * OFFLINE_PROGRESS_RATE).ceil()
-    const goldPerSecond = D(1 + this.player.rebirthCount)
-    const totalGold = goldPerSecond.times(actual * OFFLINE_PROGRESS_RATE).ceil()
+    // 估算戰鬥場次（每場約 15 秒），套用離線效率
+    const combatsPerSecond = 1 / 15
+    const totalCombats = Math.floor(combatsPerSecond * actual * offlineRate)
+
+    // 每場戰鬥平均 XP = 攻擊力 * 3（概估），套用轉生倍率
+    const xpPerCombat = this.player.currentStats.atk.times(3)
+    const totalXp = xpPerCombat.times(totalCombats).times(xpMult).ceil()
+
+    // 每場戰鬥金幣 = (重生次數 + 1) * 5，套用轉生倍率
+    const goldPerCombat = D(1 + this.player.rebirthCount).times(5)
+    const totalGold = goldPerCombat.times(totalCombats).times(goldMult).ceil()
 
     import('./systems/player/PlayerSystem').then(({ grantXP, grantGold }) => {
+      log.separator()
+      log.story(`歡迎回來！你離線了 ${timeStr}。`)
+      log.info(`離線效率：${(offlineRate * 100).toFixed(0)}%　模擬戰鬥：${totalCombats} 場`)
       grantXP(this.player, totalXp, '離線進度')
       grantGold(this.player, totalGold)
-      log.info(`離線獲得：${fmtFull(totalXp)} XP、${fmt(totalGold)} 金幣`)
+      log.info(`離線獲得：${fmt(totalXp)} XP、${fmt(totalGold)} 金幣`)
       log.separator()
     })
   }

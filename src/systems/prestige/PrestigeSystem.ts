@@ -115,6 +115,28 @@ function applyRebirthBonuses(player: PlayerState): void {
   }
 }
 
+// 計算目前有效的離線進度倍率（考慮里程碑）
+export function getOfflineRate(player: PlayerState): number {
+  if (player.flags['unlock_offline_rate_75'] || player.rebirthCount >= 100) {
+    return player.rebirthCount >= 100 ? 0.9 : 0.75
+  }
+  if (player.rebirthCount >= 10) return 0.6
+  return 0.5
+}
+
+// 計算轉生樹 XP 倍率（soul_speed 降低 xpToNext → 等效提升 XP 獲取速度）
+export function getPrestigeXpMultiplier(player: PlayerState): number {
+  const soulSpeed = player.prestige.bonusLevels['soul_speed'] ?? 0
+  const reduction = Math.min(soulSpeed * 0.02, 0.5)  // 最高減少 50%
+  return 1 / (1 - reduction)
+}
+
+// 計算轉生樹金幣倍率
+export function getPrestigeGoldMultiplier(player: PlayerState): number {
+  const soulWealth = player.prestige.bonusLevels['soul_wealth'] ?? 0
+  return 1 + soulWealth * 0.1
+}
+
 // 檢查並觸發里程碑
 function checkMilestones(player: PlayerState): void {
   for (const milestone of PRESTIGE_MILESTONES) {
@@ -123,12 +145,19 @@ function checkMilestones(player: PlayerState): void {
       !player.prestige.milestoneIds.includes(`m_${milestone.rebirthCount}`)
     ) {
       player.prestige.milestoneIds.push(`m_${milestone.rebirthCount}`)
-      log.story(`\n★ 里程碑解鎖：「${milestone.title}」`)
+      log.separator()
+      log.story(`★ 里程碑解鎖：「${milestone.title}」★`)
       log.story(milestone.description)
       milestone.rewards.forEach(r => log.quest(`  ✦ ${r}`))
       if (milestone.unlocksFeature) {
         player.flags[`unlock_${milestone.unlocksFeature}`] = true
+        // 自動化功能解鎖時預設啟用
+        if (['auto_combat', 'auto_explore', 'auto_sell'].includes(milestone.unlocksFeature)) {
+          player.flags[milestone.unlocksFeature] = true
+          log.success(`  → 已自動啟用！可在設定中關閉。`)
+        }
       }
+      log.separator()
     }
   }
 }
