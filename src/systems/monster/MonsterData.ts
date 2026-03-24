@@ -1,0 +1,185 @@
+import Decimal from 'decimal.js'
+import { D } from '../../core/bignum'
+import type { MonsterTemplate } from '../../types'
+
+export const MONSTER_TEMPLATES: Record<string, MonsterTemplate> = {
+  // ── Tier 1 怪物（草原/起始區域）────────────────────
+  slime: {
+    id: 'slime', name: '黏液史萊姆', family: 'slime', tier: 1, isBoss: false, isElite: false,
+    description: '最常見的入門怪物，身體柔軟但有酸性。',
+    baseStats: {
+      hp: D(30), mp: D(0),
+      atk: D(5), def: D(2),
+      matk: D(0), mdef: D(1),
+      spd: D(3), lck: D(1),
+      crit: D('0.03'), critDmg: D('1.5'),
+      dodge: D('0.02'), acc: D('0.9'),
+    },
+    statScaling: 1.0,
+    skillIds: [],
+    lootTable: [{ templateId: 'iron_sword', weight: 0.05, minQty: 1, maxQty: 1 }],
+    goldDrop: [2, 8],
+    xpReward: D(15),
+    tameable: true, tameRate: 0.3,
+  },
+  goblin: {
+    id: 'goblin', name: '哥布林', family: 'humanoid', tier: 1, isBoss: false, isElite: false,
+    description: '成群結隊的小型惡棍，善於偷竊。',
+    baseStats: {
+      hp: D(45), mp: D(5),
+      atk: D(8), def: D(3),
+      matk: D(2), mdef: D(2),
+      spd: D(7), lck: D(5),
+      crit: D('0.05'), critDmg: D('1.6'),
+      dodge: D('0.08'), acc: D('0.9'),
+    },
+    statScaling: 1.0,
+    skillIds: [],
+    lootTable: [{ templateId: 'leather_cap', weight: 0.08, minQty: 1, maxQty: 1 }],
+    goldDrop: [5, 15],
+    xpReward: D(25),
+    tameable: true, tameRate: 0.2,
+  },
+  wolf: {
+    id: 'wolf', name: '野狼', family: 'beast', tier: 1, isBoss: false, isElite: false,
+    description: '草原上的捕食者，行動迅速。',
+    baseStats: {
+      hp: D(60), mp: D(0),
+      atk: D(12), def: D(4),
+      matk: D(0), mdef: D(2),
+      spd: D(12), lck: D(3),
+      crit: D('0.08'), critDmg: D('1.8'),
+      dodge: D('0.1'), acc: D('0.92'),
+    },
+    statScaling: 1.1,
+    skillIds: [],
+    lootTable: [{ templateId: 'short_sword', weight: 0.06, minQty: 1, maxQty: 1 }],
+    goldDrop: [8, 20],
+    xpReward: D(35),
+    tameable: true, tameRate: 0.15,
+  },
+  skeleton: {
+    id: 'skeleton', name: '骷髏士兵', family: 'undead', tier: 2, isBoss: false, isElite: false,
+    description: '被詛咒的亡者，以骨頭為甲。',
+    baseStats: {
+      hp: D(80), mp: D(0),
+      atk: D(18), def: D(12),
+      matk: D(0), mdef: D(5),
+      spd: D(6), lck: D(2),
+      crit: D('0.05'), critDmg: D('1.7'),
+      dodge: D('0.03'), acc: D('0.88'),
+    },
+    statScaling: 1.2,
+    skillIds: [],
+    lootTable: [{ templateId: 'iron_sword', weight: 0.1, minQty: 1, maxQty: 1 }, { templateId: 'iron_helm', weight: 0.08, minQty: 1, maxQty: 1 }],
+    goldDrop: [10, 30],
+    xpReward: D(50),
+    tameable: false, tameRate: 0,
+  },
+  orc: {
+    id: 'orc', name: '獸人戰士', family: 'humanoid', tier: 2, isBoss: false, isElite: false,
+    description: '強壯有力的戰鬥種族，崇尚武力。',
+    baseStats: {
+      hp: D(120), mp: D(0),
+      atk: D(25), def: D(15),
+      matk: D(0), mdef: D(5),
+      spd: D(5), lck: D(3),
+      crit: D('0.06'), critDmg: D('2.0'),
+      dodge: D('0.05'), acc: D('0.88'),
+    },
+    statScaling: 1.3,
+    skillIds: [],
+    lootTable: [{ templateId: 'iron_armor', weight: 0.1, minQty: 1, maxQty: 1 }],
+    goldDrop: [15, 40],
+    xpReward: D(70),
+    tameable: true, tameRate: 0.1,
+  },
+  dark_mage: {
+    id: 'dark_mage', name: '黑暗法師', family: 'humanoid', tier: 3, isBoss: false, isElite: false,
+    description: '操控黑暗魔法的危險術士。',
+    baseStats: {
+      hp: D(100), mp: D(150),
+      atk: D(10), def: D(8),
+      matk: D(40), mdef: D(20),
+      spd: D(10), lck: D(8),
+      crit: D('0.1'), critDmg: D('2.2'),
+      dodge: D('0.08'), acc: D('0.93'),
+    },
+    statScaling: 1.4,
+    skillIds: ['skill_fireball'],
+    lootTable: [{ templateId: 'magic_staff', weight: 0.12, minQty: 1, maxQty: 1 }],
+    goldDrop: [25, 60],
+    xpReward: D(100),
+    tameable: true, tameRate: 0.08,
+  },
+  dragon_hatchling: {
+    id: 'dragon_hatchling', name: '幼龍', family: 'dragon', tier: 4, isBoss: false, isElite: false,
+    description: '年幼的龍族，已展現出驚人的戰鬥力。',
+    baseStats: {
+      hp: D(500), mp: D(200),
+      atk: D(80), def: D(50),
+      matk: D(60), mdef: D(40),
+      spd: D(15), lck: D(10),
+      crit: D('0.12'), critDmg: D('2.3'),
+      dodge: D('0.1'), acc: D('0.95'),
+    },
+    statScaling: 1.6,
+    skillIds: [],
+    lootTable: [{ templateId: 'dragon_fang', weight: 0.05, minQty: 1, maxQty: 1 }],
+    goldDrop: [100, 300],
+    xpReward: D(500),
+    tameable: true, tameRate: 0.05,
+    evolveToId: 'young_dragon', evolveLevelReq: 50,
+  },
+  // ── BOSS ──────────────────────────────────────────
+  goblin_king: {
+    id: 'goblin_king', name: '哥布林王', family: 'humanoid', tier: 2, isBoss: true, isElite: false,
+    description: '統率哥布林部落的殘暴首領。',
+    baseStats: {
+      hp: D(500), mp: D(50),
+      atk: D(40), def: D(25),
+      matk: D(10), mdef: D(15),
+      spd: D(8), lck: D(10),
+      crit: D('0.1'), critDmg: D('2.0'),
+      dodge: D('0.05'), acc: D('0.92'),
+    },
+    statScaling: 2.0,
+    skillIds: [],
+    lootTable: [
+      { templateId: 'iron_sword', weight: 1.0, minQty: 1, maxQty: 1 },
+      { templateId: 'iron_armor', weight: 0.8, minQty: 1, maxQty: 1 },
+    ],
+    goldDrop: [100, 250],
+    xpReward: D(300),
+    tameable: false, tameRate: 0,
+  },
+  ancient_dragon: {
+    id: 'ancient_dragon', name: '遠古龍王', family: 'dragon', tier: 8, isBoss: true, isElite: false,
+    description: '橫跨千年的傳說龍族，毀天滅地的存在。',
+    baseStats: {
+      hp: D(100000), mp: D(50000),
+      atk: D(2000), def: D(1500),
+      matk: D(1800), mdef: D(1200),
+      spd: D(30), lck: D(50),
+      crit: D('0.2'), critDmg: D('3.0'),
+      dodge: D('0.15'), acc: D('0.98'),
+    },
+    statScaling: 3.0,
+    skillIds: [],
+    lootTable: [
+      { templateId: 'dragon_fang', weight: 1.0, minQty: 1, maxQty: 1 },
+      { templateId: 'dragon_scale_armor', weight: 0.7, minQty: 1, maxQty: 1 },
+    ],
+    goldDrop: [10000, 50000],
+    xpReward: D(100000),
+    tameable: false, tameRate: 0,
+  },
+}
+
+export function getMonsterById(id: string): MonsterTemplate | undefined {
+  return MONSTER_TEMPLATES[id]
+}
+
+export function getMonstersByTier(tier: number): MonsterTemplate[] {
+  return Object.values(MONSTER_TEMPLATES).filter(m => m.tier === tier && !m.isBoss && !m.isElite)
+}

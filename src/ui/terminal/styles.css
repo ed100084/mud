@@ -1,0 +1,667 @@
+/* ── CSS Variables ─────────────────────────────── */
+:root {
+  --green: #00ff41;
+  --amber: #ffb000;
+  --red: #ff4444;
+  --blue: #5599ff;
+  --cyan: #00ddff;
+  --purple: #aa66ff;
+  --gold: #ffcc00;
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #181818;
+  --border: #1e1e1e;
+  --text: #cccccc;
+  --text-dim: #666666;
+}
+
+/* ── Global Reset ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #app {
+  width: 100%;
+  height: 100dvh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* ── MUD Root Container ────────────────────────── */
+#mud-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Status Bar (HP/MP/XP/Gold) ────────────────── */
+#gui-status {
+  padding: 6px 10px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.gui-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.stat-label {
+  width: 24px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-weight: bold;
+}
+.stat-label.red { color: var(--red); }
+.stat-label.blue { color: var(--blue); }
+.stat-label.gold { color: var(--gold); }
+
+.gui-bar {
+  flex: 1;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.bar-fill.red { background: linear-gradient(90deg, #7a0000, var(--red)); }
+.bar-fill.blue { background: linear-gradient(90deg, #003a7a, var(--blue)); }
+.bar-fill.gold { background: linear-gradient(90deg, #7a5a00, var(--gold)); }
+
+.stat-val {
+  width: 90px;
+  text-align: right;
+  color: var(--text);
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gui-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding-top: 2px;
+}
+#gold-text { color: var(--gold); }
+#rebirth-text { color: var(--purple); }
+#location-text { color: var(--cyan); }
+
+/* ── Terminal Output ───────────────────────────── */
+#terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  scroll-behavior: smooth;
+  min-height: 0;
+}
+#terminal-output::-webkit-scrollbar { width: 4px; }
+#terminal-output::-webkit-scrollbar-track { background: var(--bg2); }
+#terminal-output::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+/* ── MUD Text Lines ────────────────────────────── */
+.mud-line {
+  word-break: break-word;
+  white-space: pre-wrap;
+  min-height: 1.5em;
+}
+.mud-echo { color: #555; }
+.mud-blank { height: 0.5em; min-height: 0; }
+
+/* MUD color classes */
+.c-red    { color: var(--red); }
+.c-green  { color: var(--green); }
+.c-gold   { color: var(--gold); }
+.c-cyan   { color: var(--cyan); }
+.c-blue   { color: var(--blue); }
+.c-purple { color: var(--purple); }
+.c-grey   { color: #888888; }
+.c-white  { color: #ffffff; }
+.c-system { color: #00ccff; }
+.c-story  { color: #e0c080; }
+.c-combat { color: var(--red); }
+.c-damage { color: #ff6666; }
+.c-heal   { color: #66ff88; }
+.c-loot   { color: var(--gold); }
+.c-quest  { color: #88aaff; }
+.c-dialogue { color: #ddccaa; }
+.c-warning { color: var(--amber); }
+.c-error  { color: #ff2222; }
+.c-success { color: var(--green); }
+.c-separator { color: #333333; }
+
+/* ── Context Panel ─────────────────────────────── */
+#context-panel {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  max-height: 42vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+#context-panel::-webkit-scrollbar { width: 4px; }
+#context-panel::-webkit-scrollbar-thumb { background: #333; }
+
+/* ── Action Buttons ────────────────────────────── */
+.act-btn {
+  min-height: 52px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  transition: all 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  padding: 4px 6px;
+  text-align: center;
+  line-height: 1.3;
+  user-select: none;
+}
+.act-btn:active {
+  background: #252525;
+  border-color: var(--green);
+  transform: scale(0.97);
+}
+.act-btn.primary {
+  background: #0a1f0a;
+  border-color: #1a4d1a;
+  color: var(--green);
+}
+.act-btn.danger {
+  background: #1f0a0a;
+  border-color: #4d1a1a;
+  color: var(--red);
+}
+.act-btn.magic {
+  background: #0a0a1f;
+  border-color: #1a1a4d;
+  color: var(--purple);
+}
+.act-btn.gold {
+  background: #1f1a0a;
+  border-color: #4d440a;
+  color: var(--gold);
+}
+
+/* ── Action Grid ───────────────────────────────── */
+.action-grid {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+.action-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.action-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.action-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ── Bottom Nav ────────────────────────────────── */
+#bottom-nav {
+  display: flex;
+  background: #0d0d0d;
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  flex-shrink: 0;
+}
+
+.nav-tab {
+  flex: 1;
+  min-height: 52px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color 0.15s;
+  user-select: none;
+}
+.nav-tab .nav-icon { font-size: 20px; }
+.nav-tab.active { color: var(--green); }
+.nav-tab:active { color: var(--text); }
+
+/* ── Slide Panel Overlay ───────────────────────── */
+#slide-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  background: rgba(0, 0, 0, 0.7);
+  align-items: flex-end;
+}
+#slide-panel-overlay.open {
+  display: flex;
+}
+
+/* ── Slide Panel ───────────────────────────────── */
+#slide-panel {
+  width: 100%;
+  max-height: 85vh;
+  background: var(--bg2);
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.panel-title { color: var(--green); font-size: 16px; }
+.panel-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 12px;
+  max-height: calc(85vh - 56px);
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: #333; }
+
+/* ── Section Headers in Panels ─────────────────── */
+.section-title {
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+/* ── Stat Table in Character Panel ─────────────── */
+.stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stat-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.stat-table td:first-child { color: var(--text-dim); }
+.stat-table td:last-child { color: var(--green); text-align: right; }
+
+/* ── Job Cards ─────────────────────────────────── */
+.job-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.job-card.available { border-color: var(--green); }
+.job-card.current { border-color: var(--gold); }
+.job-card-name { font-size: 13px; }
+.job-card.available .job-card-name { color: var(--green); }
+.job-card.current .job-card-name { color: var(--gold); }
+.job-card-info { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+/* ── Item Cards ────────────────────────────────── */
+.item-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.item-name { flex: 1; font-size: 13px; }
+.item-slot { color: var(--text-dim); font-size: 11px; }
+.item-rarity-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.rarity-Common    { color: #888; border: 1px solid #333; }
+.rarity-Uncommon  { color: #1eff00; border: 1px solid #1eff0044; }
+.rarity-Rare      { color: #0088ff; border: 1px solid #0088ff44; }
+.rarity-Epic      { color: #aa33ff; border: 1px solid #aa33ff44; }
+.rarity-Legendary { color: #ff8800; border: 1px solid #ff880044; }
+.rarity-Mythic    { color: #ffdd66; border: 1px solid #ffdd6644; }
+.rarity-Transcendent { color: #ff66aa; border: 1px solid #ff66aa44; }
+
+.item-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+.item-btn:active { background: #252525; }
+
+/* ── Enemy Cards (Combat) ──────────────────────── */
+#enemy-cards {
+  display: flex;
+  gap: 8px;
+  padding: 10px 10px 0;
+  overflow-x: auto;
+}
+.enemy-card {
+  background: var(--bg3);
+  border: 1px solid #3d1a1a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.enemy-name { color: var(--red); font-size: 15px; font-weight: bold; }
+.enemy-hp-bar {
+  width: 100%;
+  height: 10px;
+  background: #222;
+  border-radius: 5px;
+  margin: 6px 0 3px;
+  overflow: hidden;
+}
+.enemy-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7a0000, var(--red));
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+.enemy-hp-text { color: var(--text-dim); font-size: 11px; }
+
+/* ── D-Pad (Dungeon) ───────────────────────────── */
+.dungeon-panel { padding: 10px; }
+.dungeon-layout {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 4px;
+  flex-shrink: 0;
+}
+.dpad-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+.dpad-btn:active { background: #252525; }
+.dpad-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 10px;
+}
+.dungeon-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex: 1;
+}
+.dungeon-actions .act-btn { min-height: 48px; font-size: 12px; }
+
+/* ── Town Panel ────────────────────────────────── */
+.town-header { padding: 8px 10px 4px; }
+.town-name { color: var(--cyan); font-size: 14px; }
+.town-desc { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+
+/* ── Quest Cards ───────────────────────────────── */
+.quest-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.quest-title { color: var(--gold); font-size: 13px; }
+.quest-obj { color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+.quest-progress {
+  width: 100%;
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.quest-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+
+/* ── Prestige Nodes ────────────────────────────── */
+.prestige-node {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prestige-node.owned { border-color: var(--purple); }
+.prestige-node-info { flex: 1; }
+.prestige-node-name { color: var(--purple); font-size: 13px; }
+.prestige-node-desc { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+.prestige-node-cost { color: var(--gold); font-size: 11px; margin-top: 2px; }
+.prestige-buy-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--purple);
+  background: #110011;
+  color: var(--purple);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.prestige-buy-btn:active { background: #1a001a; }
+.prestige-buy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Rebirth Button ────────────────────────────── */
+.rebirth-big-btn {
+  width: 100%;
+  padding: 14px;
+  background: #110022;
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+  color: var(--purple);
+  font-size: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 12px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.rebirth-big-btn:active { background: #1a0033; }
+.rebirth-big-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Job XP Bar ────────────────────────────────── */
+.job-xp-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.job-xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7a5a00, var(--gold));
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+
+/* ── Equipped Items Section ────────────────────── */
+.equipped-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.equipped-chip {
+  background: #0a1f0a;
+  border: 1px solid #1a4d1a;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--green);
+}
+.equipped-chip.empty { color: var(--text-dim); border-color: var(--border); background: var(--bg); }
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 360px) {
+  .action-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .act-btn { font-size: 12px; min-height: 46px; }
+  .nav-tab .nav-icon { font-size: 18px; }
+}
+
+/* ── Event Choice & Dialogue Panels ───────────── */
+.choice-panel, .dialogue-panel {
+  padding: 10px 12px;
+}
+
+.choice-header {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: bold;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.npc-name-title {
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: bold;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.npc-dialogue-text {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+.choice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.choice-btn {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  padding: 8px 14px;
+  transition: all 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  line-height: 1.4;
+}
+
+.choice-btn:active {
+  background: #252525;
+  border-color: var(--green);
+  transform: scale(0.98);
+}
+
+/* ── Animations ────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blink { animation: blink 1s step-end infinite; }
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+#slide-panel-overlay.open #slide-panel {
+  animation: slideUp 0.25s ease-out;
+}
