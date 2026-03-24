@@ -550,7 +550,7 @@ export class UIManager {
         const check = canChangeJob(p, j.id)
         const cls = check.ok ? 'available' : ''
         const info = check.ok ? `Tier ${j.tier} · ${j.description}` : (check.reason ?? '')
-        const cmdAttr = check.ok ? `data-cmd="job ${j.id}"` : ''
+        const cmdAttr = check.ok ? `data-cmd="changejob ${j.id}"` : ''
         return `
           <div class="job-card ${cls}" ${cmdAttr} style="cursor:${check.ok ? 'pointer' : 'default'}">
             <div class="job-card-name">${j.name}</div>
@@ -766,7 +766,7 @@ export class UIManager {
       btn.addEventListener('click', (e) => {
         e.stopPropagation()
         const nodeId = (btn as HTMLElement).dataset.nodeId!
-        this.cmdFn(`prestige buy ${nodeId}`)
+        this.cmdFn(`buytier ${nodeId}`)
         setTimeout(() => this.buildPrestigePanel(), 100)
       })
     })
