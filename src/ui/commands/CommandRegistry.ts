@@ -1,5 +1,5 @@
 import { log } from '../../core/logger'
-import { fmt, fmtFull } from '../../core/bignum'
+import { fmt, fmtFull, D } from '../../core/bignum'
 import { terminal } from '../terminal/Terminal'
 import type { PlayerState } from '../../types'
 
@@ -394,7 +394,7 @@ registerCommand('inn', {
     if (p.location.type !== 'town') { log.warning('你不在城鎮中。'); return }
     if (p.gold.lt(20)) { log.warning('金幣不足（需要 20 金幣）。'); return }
     import('../../systems/player/PlayerSystem').then(({ fullRestore, spendGold }) => {
-      spendGold(p, p.gold.constructor(20))
+      if (!spendGold(p, D(20))) { log.warning('金幣不足。'); return }
       fullRestore(p)
     })
   }
