@@ -1,19 +1,21 @@
 import { bus } from '../core/eventbus'
 import { fmt, fmtFull } from '../core/bignum'
 import { getActiveCombat } from '../systems/combat/CombatSystem'
-import { getActiveDungeon } from '../systems/dungeon/DungeonSystem'
-import { TOWNS, NPCS } from '../systems/town/TownData'
+import { getActiveDungeon, DUNGEON_TEMPLATES } from '../systems/dungeon/DungeonSystem'
+import { TOWNS, NPCS, SHOPS } from '../systems/town/TownData'
 import { JOB_DEFINITIONS } from '../systems/job/JobData'
 import { canChangeJob } from '../systems/job/JobSystem'
 import { canRebirth } from '../systems/prestige/PrestigeSystem'
 import { PRESTIGE_NODES } from '../systems/prestige/PrestigeData'
 import { QUEST_DEFINITIONS } from '../systems/npc/QuestSystem'
-import { getAllItems, getEquippedItems, equipItem, unequipSlot, sellItem } from '../systems/equipment/EquipmentSystem'
-import { RANDOM_EVENTS } from '../systems/adventure/AdventureSystem'
+import { getAllItems, getEquippedItems, equipItem, unequipSlot, sellItem, addItemToInventory } from '../systems/equipment/EquipmentSystem'
+import { EQUIPMENT_TEMPLATES } from '../systems/equipment/EquipmentData'
+import { generateItem } from '../systems/equipment/ItemGenerator'
+import { RANDOM_EVENTS, ZONES } from '../systems/adventure/AdventureSystem'
 import type { PlayerState } from '../types'
 
 type UIMode = 'default' | 'combat' | 'dungeon' | 'town' | 'event_choice' | 'dialogue'
-type PanelType = 'character' | 'inventory' | 'quests' | 'prestige' | null
+type PanelType = 'character' | 'inventory' | 'quests' | 'prestige' | 'shop' | 'dungeons' | 'zones' | null
 
 export class UIManager {
   private guiStatus!: HTMLElement
@@ -138,12 +140,22 @@ export class UIManager {
       }
     })
 
-    // Global delegation for all data-cmd buttons
+    // Global delegation for data-cmd and data-open-panel buttons
     document.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest('[data-cmd]') as HTMLElement | null
+      const btn = (e.target as HTMLElement).closest('[data-cmd],[data-open-panel]') as HTMLElement | null
       if (!btn) return
-      const cmd = btn.dataset.cmd
+
+      // data-open-panel: open a slide panel by name
+      if ((btn as HTMLElement).hasAttribute('data-open-panel')) {
+        const panelName = (btn as HTMLElement).dataset.openPanel
+        if (panelName) this.openSlidePanel(panelName as PanelType)
+        return
+      }
+
+      const cmd = (btn as HTMLElement).dataset.cmd
       if (cmd && cmd.trim() !== '') {
+        // Close slide panel when command is triggered from inside it
+        if (btn.closest('#slide-panel')) this.closeSlidePanel()
         this.cmdFn(cmd)
         setTimeout(() => this.refresh(), 100)
       }
@@ -392,11 +404,11 @@ export class UIManager {
   private buildDefaultPanel(): void {
     this.contextPanel.innerHTML = `
       <div class="action-grid cols-3">
-        <button class="act-btn primary" data-cmd="explore">🗺 探索</button>
+        <button class="act-btn primary" data-open-panel="zones">🗺 探索</button>
         <button class="act-btn" data-cmd="town">🏙 城鎮</button>
-        <button class="act-btn" data-cmd="status">👤 狀態</button>
-        <button class="act-btn" data-cmd="jobs">⚔ 職業</button>
-        <button class="act-btn" data-cmd="rebirth">✨ 重生</button>
+        <button class="act-btn" data-open-panel="dungeons">⚔ 地城</button>
+        <button class="act-btn" data-open-panel="character">👤 角色</button>
+        <button class="act-btn" data-open-panel="prestige">✨ 重生樹</button>
         <button class="act-btn" data-cmd="save">💾 存檔</button>
       </div>
     `
@@ -420,12 +432,12 @@ export class UIManager {
         ${townDesc ? `<div class="town-desc">${townDesc}</div>` : ''}
       </div>
       <div class="action-grid cols-3">
-        <button class="act-btn" data-cmd="explore">🗺 探索</button>
-        <button class="act-btn" data-cmd="shop">🛒 商店</button>
+        <button class="act-btn primary" data-open-panel="zones">🗺 探索</button>
+        <button class="act-btn" data-open-panel="shop">🛒 商店</button>
         <button class="act-btn" data-cmd="inn">🏨 旅館</button>
         ${npcBtns}
-        <button class="act-btn" data-cmd="dungeon goblin_cave">⚔ 哥布林洞窟</button>
-        <button class="act-btn" data-cmd="quests">📋 任務</button>
+        <button class="act-btn" data-open-panel="dungeons">⚔ 地城</button>
+        <button class="act-btn" data-open-panel="quests">📋 任務</button>
       </div>
     `
   }
@@ -453,13 +465,11 @@ export class UIManager {
     this.contextPanel.innerHTML = `
       <div class="combat-panel">
         ${enemyCardsHTML ? `<div id="enemy-cards">${enemyCardsHTML}</div>` : ''}
-        <div class="action-grid cols-4">
+        <div class="action-grid cols-2">
           <button class="act-btn primary" data-cmd="attack">⚔ 攻擊</button>
           <button class="act-btn" data-cmd="defend">🛡 防禦</button>
-          <button class="act-btn magic" data-cmd="skill 1">✨ 技能</button>
-          <button class="act-btn danger" data-cmd="flee">🏃 逃跑</button>
           <button class="act-btn" data-cmd="tame">🐾 馴服</button>
-          <button class="act-btn" data-cmd="inventory">📦 物品</button>
+          <button class="act-btn danger" data-cmd="flee">🏃 逃跑</button>
         </div>
       </div>
     `
@@ -521,6 +531,9 @@ export class UIManager {
       case 'inventory': this.panelTitle.textContent = '物品欄';   this.buildInventoryPanel(); break
       case 'quests':    this.panelTitle.textContent = '任務列表'; this.buildQuestsPanel();    break
       case 'prestige':  this.panelTitle.textContent = '重生樹';   this.buildPrestigePanel();  break
+      case 'shop':      this.panelTitle.textContent = '商店';     this.buildShopPanel();      break
+      case 'dungeons':  this.panelTitle.textContent = '地城選擇'; this.buildDungeonsPanel();  break
+      case 'zones':     this.panelTitle.textContent = '探索區域'; this.buildZonesPanel();     break
     }
   }
 
@@ -723,6 +736,7 @@ export class UIManager {
     if (!p) { this.panelBody.innerHTML = '<div>載入中...</div>'; return }
 
     const rebirthCheck = canRebirth(p)
+    const isPendingRebirth = !!p.flags?.['pending_rebirth']
     const soulTotal = p.prestige?.totalSoulFragments ?? p.soulFragments
     const soulSpent = p.prestige?.spentSoulFragments
     const soulAvail = soulTotal && soulSpent ? soulTotal.minus(soulSpent) : soulTotal
@@ -754,12 +768,31 @@ export class UIManager {
         &nbsp;&nbsp;
         靈魂碎片：<span style="color:var(--gold)">${fmtFull(soulAvail ?? p.soulFragments)}</span>
       </div>
-      <button class="rebirth-big-btn" ${rebirthCheck.ok ? 'data-cmd="rebirth confirm"' : 'disabled'}>
-        ✨ 重生${rebirthCheck.ok ? '' : ` (${rebirthCheck.reason ?? ''})`}
-      </button>
+      ${isPendingRebirth
+        ? `<button class="rebirth-big-btn danger-pulse" id="rebirth-confirm-btn">⚠ 確認重生！（不可逆）</button>
+           <button class="rebirth-cancel-btn" id="rebirth-cancel-btn">取消</button>`
+        : rebirthCheck.ok
+          ? `<button class="rebirth-big-btn" id="rebirth-prepare-btn">✨ 重生</button>`
+          : `<button class="rebirth-big-btn" disabled>✨ 重生（${rebirthCheck.reason ?? '條件不足'}）</button>`
+      }
       <div class="section-title">重生樹</div>
       ${nodesHTML || '<div style="color:var(--text-dim);font-size:12px">尚未解鎖任何節點</div>'}
     `
+
+    // Rebirth buttons
+    document.getElementById('rebirth-prepare-btn')?.addEventListener('click', () => {
+      this.cmdFn('rebirth')
+      setTimeout(() => this.buildPrestigePanel(), 150)
+    })
+    document.getElementById('rebirth-confirm-btn')?.addEventListener('click', () => {
+      this.cmdFn('confirm_rebirth')
+      this.closeSlidePanel()
+      setTimeout(() => this.refresh(), 200)
+    })
+    document.getElementById('rebirth-cancel-btn')?.addEventListener('click', () => {
+      delete p.flags['pending_rebirth']
+      this.buildPrestigePanel()
+    })
 
     // Bind prestige node buy buttons
     this.panelBody.querySelectorAll('.prestige-buy-btn:not([disabled])').forEach(btn => {
@@ -770,6 +803,150 @@ export class UIManager {
         setTimeout(() => this.buildPrestigePanel(), 100)
       })
     })
+  }
+
+  // ── Shop Panel ─────────────────────────────────────────────
+
+  private buildShopPanel(): void {
+    const p = this.getPlayer?.()
+    if (!p) { this.panelBody.innerHTML = '<div>載入中...</div>'; return }
+
+    const townId = p.location.type === 'town' ? p.location.id : 'starting_town'
+    const town = TOWNS[townId]
+    if (!town || town.shopIds.length === 0) {
+      this.panelBody.innerHTML = '<div style="color:var(--text-dim)">此處沒有商店。</div>'
+      return
+    }
+
+    const templateNames: Record<string, string> = Object.fromEntries(
+      EQUIPMENT_TEMPLATES.map(t => [t.id, t.name])
+    )
+
+    let html = `<div style="color:var(--gold);font-size:12px;margin-bottom:10px">💰 你的金幣：${fmt(p.gold)}</div>`
+
+    for (const shopId of town.shopIds) {
+      const shop = SHOPS[shopId]
+      if (!shop) continue
+      html += `<div class="section-title">${shop.name}</div>`
+      shop.inventory.forEach((item, i) => {
+        const name = templateNames[item.templateId] ?? item.templateId
+        const canAfford = p.gold.gte(item.price)
+        html += `
+          <div class="shop-item-row">
+            <div class="shop-item-info">
+              <div class="shop-item-name">${name}</div>
+              <div class="shop-item-price">💰 ${fmt(item.price)}</div>
+            </div>
+            <span style="color:var(--text-dim);font-size:11px;flex-shrink:0">×${item.quantity}</span>
+            <button class="item-btn shop-buy-btn"
+              data-shop-id="${shopId}" data-item-idx="${i}"
+              ${canAfford && item.quantity > 0 ? '' : 'disabled'}>購買</button>
+          </div>
+        `
+      })
+    }
+
+    this.panelBody.innerHTML = html
+
+    this.panelBody.querySelectorAll('.shop-buy-btn:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const el = btn as HTMLElement
+        const shopId = el.dataset.shopId!
+        const idx = parseInt(el.dataset.itemIdx!)
+        const shop = SHOPS[shopId]
+        if (!shop) return
+        const shopItem = shop.inventory[idx]
+        if (!p.gold.gte(shopItem.price)) return
+        p.gold = p.gold.minus(shopItem.price)
+        const item = generateItem({
+          level: Math.max(1, p.level.toNumber()),
+          rebirthTier: p.rebirthCount,
+          lck: p.currentStats.lck.toNumber(),
+          slotHint: undefined,
+        })
+        addItemToInventory(p, item)
+        import('../core/logger').then(({ log }) => log.success(`購買了「${item.name}」！`))
+        setTimeout(() => this.buildShopPanel(), 50)
+      })
+    })
+  }
+
+  // ── Dungeons Panel ─────────────────────────────────────────
+
+  private buildDungeonsPanel(): void {
+    const p = this.getPlayer?.()
+    if (!p) { this.panelBody.innerHTML = '<div>載入中...</div>'; return }
+
+    const playerLevel = p.level.toNumber()
+    let html = ''
+
+    for (const dungeon of Object.values(DUNGEON_TEMPLATES)) {
+      const locked = playerLevel < dungeon.minLevel
+      html += `
+        <div class="dungeon-card ${locked ? 'locked' : ''}">
+          <div class="dungeon-card-header">
+            <div>
+              <div class="dungeon-card-name">${dungeon.name}</div>
+              <div class="dungeon-card-desc">${dungeon.description}</div>
+            </div>
+            <div class="dungeon-card-meta">
+              <span>Tier ${dungeon.tier}</span>
+              <span>${dungeon.maxFloors}F</span>
+            </div>
+          </div>
+          <div class="dungeon-card-footer">
+            <span class="dungeon-req ${locked ? 'locked' : ''}">
+              ${locked ? `🔒 需 Lv.${dungeon.minLevel}` : `✓ Lv.${dungeon.minLevel}+`}
+            </span>
+            <button class="item-btn" data-cmd="dungeon ${dungeon.id}" ${locked ? 'disabled' : ''}>進入</button>
+          </div>
+        </div>
+      `
+    }
+
+    this.panelBody.innerHTML = html || '<div style="color:var(--text-dim)">無可用地城</div>'
+  }
+
+  // ── Zones Panel ────────────────────────────────────────────
+
+  private buildZonesPanel(): void {
+    const p = this.getPlayer?.()
+    if (!p) { this.panelBody.innerHTML = '<div>載入中...</div>'; return }
+
+    const playerLevel = p.level.toNumber()
+    let html = ''
+
+    for (const zone of Object.values(ZONES)) {
+      const locked = playerLevel < zone.unlockLevel
+      html += `
+        <div class="dungeon-card ${locked ? 'locked' : ''}">
+          <div class="dungeon-card-header">
+            <div>
+              <div class="dungeon-card-name">${zone.name}</div>
+              <div class="dungeon-card-desc">${zone.description}</div>
+            </div>
+            <div class="dungeon-card-meta">
+              <span>Tier ${zone.tier}</span>
+            </div>
+          </div>
+          ${locked
+            ? `<div class="dungeon-card-footer">
+                 <span class="dungeon-req locked">🔒 需 Lv.${zone.unlockLevel}</span>
+               </div>`
+            : `<div class="zone-areas">
+                 ${zone.areas.map(area => `
+                   <button class="act-btn zone-area-btn" data-cmd="explore ${zone.id} ${area.id}">
+                     ${area.name}
+                   </button>
+                 `).join('')}
+               </div>`
+          }
+        </div>
+      `
+    }
+
+    this.panelBody.innerHTML = html || '<div style="color:var(--text-dim)">無可用區域</div>'
   }
 }
 
