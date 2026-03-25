@@ -1,11 +1,7 @@
-import Decimal from 'decimal.js'
-import { D, fmt } from '../../core/bignum'
 import { globalRng } from '../../core/rng'
-import { bus } from '../../core/eventbus'
 import { log } from '../../core/logger'
 import { startCombat } from '../combat/CombatSystem'
-import { processKillLoot } from '../inventory/LootSystem'
-import { getMonstersByTier, getMonsterById } from '../monster/MonsterData'
+import { getMonsterById } from '../monster/MonsterData'
 import type { PlayerState, Zone, Area } from '../../types'
 
 // ── 區域資料 ─────────────────────────────────────────
@@ -236,6 +232,9 @@ export function resolveEvent(player: PlayerState, optionIndex: number): void {
     } else {
       if (player.gold.gte(Math.abs(opt.goldChange))) {
         player.gold = player.gold.plus(opt.goldChange)
+        log.warning(`花費 ${Math.abs(opt.goldChange)} 金幣`)
+      } else {
+        log.warning(`金幣不足（需要 ${Math.abs(opt.goldChange)} 金幣），無法完成交易。`)
       }
     }
   }

@@ -128,6 +128,7 @@ function triggerRoom(player: PlayerState, room: RoomState, dungeon: DungeonRun):
       if (boss) {
         log.story(`\n⚔ BOSS 出現！${boss.name} 從黑暗中現身！`)
         startCombat(player, [boss], 'dungeon_boss', `地城BOSS-${floor}F`, floor, tier)
+        room.isCleared = true
       }
       break
     }

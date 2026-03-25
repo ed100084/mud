@@ -5,6 +5,8 @@ import { log } from '../../core/logger'
 import { globalRng } from '../../core/rng'
 import { scaleMonsterStat } from '../../core/formula'
 import { resolveAttack } from './CombatFormulas'
+import { processKillLoot } from '../inventory/LootSystem'
+import { getMonsterById } from '../monster/MonsterData'
 import { AUTO_COMBAT_DELAY_MS } from '../../constants'
 import type { CombatState, CombatUnit } from '../../types'
 import type { PlayerState } from '../../types'
@@ -100,6 +102,8 @@ export function startCombat(
     isActive: true,
     isPlayerTurn: false,
     location,
+    floor,
+    tier,
   }
   activeCombat.isPlayerTurn = activeCombat.turnOrder[0] === 'player'
   bus.emit('combat:start', { enemyNames: enemies.map(e => e.name), location })
@@ -263,7 +267,18 @@ function endCombat(player: PlayerState, combat: CombatState, victory: boolean, f
   log.separator()
   if (victory) {
     log.success('⚔  戰鬥勝利！')
-    bus.emit('combat:end', { victory: true, xp: '0', gold: '0' })
+    // 為每隻被擊敗的敵人發放 XP、金幣與掉落物
+    let totalXp = D(0)
+    let totalGold = D(0)
+    for (const enemy of combat.enemies) {
+      if (!enemy.templateId) continue
+      const template = getMonsterById(enemy.templateId)
+      if (!template) continue
+      const loot = processKillLoot(player, template, combat.floor, combat.tier)
+      totalXp = totalXp.plus(loot.xp)
+      totalGold = totalGold.plus(loot.gold)
+    }
+    bus.emit('combat:end', { victory: true, xp: totalXp.toString(), gold: totalGold.toString() })
   } else if (!fled) {
     log.error('💀  你被擊敗了...')
     player.currentHP = player.currentStats.hp.times(0.1).ceil()
