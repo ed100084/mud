@@ -6,6 +6,7 @@ export interface GameEventMap {
   'player:job_change': { oldJob: string; newJob: string }
   'player:rebirth': { count: number; soulFragments: string }
   'player:death': { location: string }
+  'player:heal': { amount: string }
   'combat:start': { enemyNames: string[]; location: string }
   'combat:end': { victory: boolean; xp: string; gold: string }
   'combat:damage': { actorId: string; targetId: string; amount: string; isCrit: boolean }

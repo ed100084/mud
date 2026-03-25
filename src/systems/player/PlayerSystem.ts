@@ -127,6 +127,7 @@ export function healPlayer(player: PlayerState, amount: Decimal): void {
   if (player.currentHP.gt(player.currentStats.hp)) {
     player.currentHP = player.currentStats.hp.plus(0)
   }
+  bus.emit('player:heal', { amount: amount.toString() })
 }
 
 // 恢復 MP
@@ -142,6 +143,7 @@ export function fullRestore(player: PlayerState): void {
   player.currentHP = player.currentStats.hp.plus(0)
   player.currentMP = player.currentStats.mp.plus(0)
   log.heal('你在旅店好好休息，完全恢復了！')
+  bus.emit('player:heal', { amount: 'full' })
 }
 
 // 設定旗標

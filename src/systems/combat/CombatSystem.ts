@@ -156,7 +156,7 @@ export function playerAttack(player: PlayerState): boolean {
     log.combat(`  ${player.name} 攻擊 ${target.name}... 未命中！`)
   } else {
     applyDamage(target, result.amount)
-    const crit = result.isCrit ? ' 【爆擊！】' : ''
+    const crit = result.isCrit ? ' [gold]★ 爆擊！★[/gold]' : ''
     log.damage(`  ▶ ${player.name} 攻擊 ${target.name}！造成 ${fmtFull(result.amount)} 傷害${crit}`)
     bus.emit('combat:damage', { actorId: 'player', targetId: target.unitId, amount: result.amount.toString(), isCrit: result.isCrit })
   }
@@ -242,8 +242,9 @@ function processEnemyTurns(player: PlayerState): void {
     log.combat(`  ${cur.name} 攻擊 ${target.name}... 未命中！`)
   } else {
     applyDamage(target, result.amount)
-    const crit = result.isCrit ? ' 【爆擊！】' : ''
+    const crit = result.isCrit ? ' [gold]★ 爆擊！★[/gold]' : ''
     log.damage(`  ◀ ${cur.name} 攻擊 ${target.name}！造成 ${fmtFull(result.amount)} 傷害${crit}`)
+    bus.emit('combat:damage', { actorId: cur.unitId, targetId: target.isPlayer ? 'player' : target.unitId, amount: result.amount.toString(), isCrit: result.isCrit })
     if (target.isPlayer) player.currentHP = target.currentHP.plus(0)
   }
   checkCombatEnd(player, combat)

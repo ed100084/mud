@@ -116,14 +116,17 @@ function triggerRoom(player: PlayerState, room: RoomState, dungeon: DungeonRun):
       openTreasureChest(player, tier)
       room.isCleared = true
       break
-    case 'rest':
+    case 'rest': {
       log.heal('這裡有一個休息點，你稍作休息恢復了一些 HP/MP。')
-      player.currentHP = player.currentHP.plus(player.currentStats.hp.times(0.3))
+      const restHeal = player.currentStats.hp.times(0.3)
+      player.currentHP = player.currentHP.plus(restHeal)
       if (player.currentHP.gt(player.currentStats.hp)) player.currentHP = player.currentStats.hp.plus(0)
+      bus.emit('player:heal', { amount: restHeal.toString() })
       player.currentMP = player.currentMP.plus(player.currentStats.mp.times(0.3))
       if (player.currentMP.gt(player.currentStats.mp)) player.currentMP = player.currentStats.mp.plus(0)
       room.isCleared = true
       break
+    }
     case 'boss': {
       const bossId = template?.bossIds[0] ?? 'goblin_king'
       const boss = getMonsterById(bossId)

@@ -1,5 +1,6 @@
 import { bus } from '../core/eventbus'
 import { fmt, fmtFull } from '../core/bignum'
+import Decimal from 'decimal.js'
 import { getActiveCombat } from '../systems/combat/CombatSystem'
 import { getActiveDungeon, DUNGEON_TEMPLATES } from '../systems/dungeon/DungeonSystem'
 import { TOWNS, NPCS, SHOPS } from '../systems/town/TownData'
@@ -49,7 +50,7 @@ export class UIManager {
     this.guiStatus = document.createElement('div')
     this.guiStatus.id = 'gui-status'
     this.guiStatus.innerHTML = `
-      <div class="gui-stat-row">
+      <div class="gui-stat-row" id="hp-row">
         <span class="stat-label red">HP</span>
         <div class="gui-bar"><div id="hp-fill" class="bar-fill red" style="width:100%"></div></div>
         <span id="hp-text" class="stat-val">100/100</span>
@@ -179,6 +180,34 @@ export class UIManager {
     bus.on('player:rebirth',  () => setTimeout(() => this.refresh(), 50))
     bus.on('dungeon:floor_complete', () => setTimeout(() => this.refresh(), 50))
     bus.on('dungeon:cleared',        () => setTimeout(() => this.refresh(), 50))
+
+    bus.on('combat:damage', ({ targetId, amount, isCrit }: { targetId: string; amount: string; isCrit: boolean }) => {
+      const text = fmt(new Decimal(amount))
+      const cls = isCrit ? 'crit' : 'dmg'
+      if (targetId === 'player') {
+        const row = document.getElementById('hp-row')
+        if (row) this.spawnFloat(row, `-${text}`, cls)
+      } else {
+        const card = document.getElementById(`ecard-${targetId}`)
+        if (card) this.spawnFloat(card, `-${text}`, cls)
+      }
+    })
+
+    bus.on('player:heal', ({ amount }: { amount: string }) => {
+      const row = document.getElementById('hp-row')
+      if (!row) return
+      const text = amount === 'full' ? '完全恢復' : `+${fmt(new Decimal(amount))}`
+      this.spawnFloat(row, text, 'heal')
+    })
+  }
+
+  private spawnFloat(parent: Element, text: string, cls: 'dmg' | 'crit' | 'heal'): void {
+    const el = document.createElement('div')
+    el.className = `float-num float-${cls}`
+    el.textContent = text
+    el.style.left = `${20 + Math.random() * 60}%`
+    parent.appendChild(el)
+    setTimeout(() => el.remove(), 1200)
   }
 
   // ── Public API ─────────────────────────────────────────────
@@ -465,7 +494,7 @@ export class UIManager {
       enemyCardsHTML = alive.map((e, i) => {
         const pct = e.maxHP.gt(0) ? clamp(e.currentHP.div(e.maxHP).times(100).toNumber()) : 0
         return `
-          <div class="enemy-card">
+          <div class="enemy-card" id="ecard-${e.unitId}">
             <div class="enemy-name">${e.name}</div>
             <div class="enemy-hp-bar">
               <div class="enemy-hp-fill" id="enemy-hp-${i}" style="width:${pct.toFixed(1)}%"></div>
