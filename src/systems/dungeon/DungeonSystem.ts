@@ -118,8 +118,10 @@ function triggerRoom(player: PlayerState, room: RoomState, dungeon: DungeonRun):
       break
     case 'rest':
       log.heal('這裡有一個休息點，你稍作休息恢復了一些 HP/MP。')
-      player.currentHP = player.currentHP.plus(player.currentStats.hp.times(0.3)).min(player.currentStats.hp)
-      player.currentMP = player.currentMP.plus(player.currentStats.mp.times(0.3)).min(player.currentStats.mp)
+      player.currentHP = player.currentHP.plus(player.currentStats.hp.times(0.3))
+      if (player.currentHP.gt(player.currentStats.hp)) player.currentHP = player.currentStats.hp.plus(0)
+      player.currentMP = player.currentMP.plus(player.currentStats.mp.times(0.3))
+      if (player.currentMP.gt(player.currentStats.mp)) player.currentMP = player.currentStats.mp.plus(0)
       room.isCleared = true
       break
     case 'boss': {

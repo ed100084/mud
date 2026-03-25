@@ -12,6 +12,7 @@ export interface CommandContext {
 type CommandHandler = (args: string[], ctx: CommandContext) => void
 
 interface CommandDef {
+  verb?: string
   handler: CommandHandler
   description: string
   usage: string
