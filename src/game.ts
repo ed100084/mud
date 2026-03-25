@@ -7,7 +7,7 @@ import { executeCommand } from './ui/commands/CommandRegistry'
 import { createPlayer } from './systems/player/PlayerSystem'
 import { recalcStats } from './systems/player/StatsSystem'
 import { getEquippedItems } from './systems/equipment/EquipmentSystem'
-import { saveGame, loadGame, startAutoSave } from './save/SaveManager'
+import { saveGame, loadGame, startAutoSave, setAutoSaveInterval } from './save/SaveManager'
 import { OFFLINE_MAX_HOURS, AUTO_EXPLORE_DELAY_MS } from './constants'
 import { D, fmt, fmtFull, toDecimal } from './core/bignum'
 import { updateQuestProgress } from './systems/npc/QuestSystem'
@@ -88,8 +88,12 @@ export class GameEngine {
       }, AUTO_EXPLORE_DELAY_MS)
     })
 
-    // 啟動自動存檔
+    // 啟動自動存檔（套用玩家上次設定的頻率）
     startAutoSave(() => this.player)
+    const savedInterval = this.player.flags['autosave_interval']
+    if (typeof savedInterval === 'number' && savedInterval >= 0) {
+      setAutoSaveInterval(savedInterval)
+    }
 
     // 顯示歡迎訊息
     this.showWelcome()

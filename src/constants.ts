@@ -5,6 +5,13 @@ export const TICK_MS = 50                // 20 TPS
 export const OFFLINE_PROGRESS_RATE = 0.5
 export const OFFLINE_MAX_HOURS = 24
 export const AUTO_SAVE_INTERVAL_MS = 60_000
+export const AUTOSAVE_OPTIONS: { label: string; ms: number }[] = [
+  { label: '30 秒', ms: 30_000 },
+  { label: '1 分鐘', ms: 60_000 },
+  { label: '2 分鐘', ms: 120_000 },
+  { label: '5 分鐘', ms: 300_000 },
+  { label: '關閉',   ms: 0 },
+]
 export const OUTPUT_BUFFER_MAX_LINES = 10_000
 export const OUTPUT_BUFFER_VISIBLE_LINES = 60
 

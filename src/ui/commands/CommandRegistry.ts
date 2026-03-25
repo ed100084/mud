@@ -720,8 +720,8 @@ registerCommand('auto_explore', {
 registerCommand('settings', {
   verb: 'settings', aliases: ['設定'], category: 'system',
   description: '遊戲設定',
-  usage: 'settings [theme <green|amber|white>]',
-  handler: (args, _ctx) => {
+  usage: 'settings [theme <green|amber|white>] [autosave <30s|1m|2m|5m|off>]',
+  handler: (args, ctx) => {
     import('../../core/logger').then(({ log }) => {
       if (args[0] === 'theme' && args[1]) {
         const themes: Record<string, string> = { green: '', amber: 'theme-amber', white: 'theme-white' }
@@ -732,8 +732,22 @@ registerCommand('settings', {
         } else {
           log.warning('可用主題：green / amber / white')
         }
+      } else if (args[0] === 'autosave' && args[1]) {
+        const map: Record<string, number> = {
+          '30s': 30_000, '1m': 60_000, '2m': 120_000, '5m': 300_000, 'off': 0,
+        }
+        const ms = map[args[1]]
+        if (ms === undefined) {
+          log.warning('可選頻率：30s / 1m / 2m / 5m / off')
+          return
+        }
+        import('../../save/SaveManager').then(({ setAutoSaveInterval }) => {
+          setAutoSaveInterval(ms)
+          if (ctx?.player) ctx.player.flags['autosave_interval'] = ms
+          log.success(ms === 0 ? '自動存檔已關閉' : `自動存檔頻率：${args[1]}`)
+        })
       } else {
-        log.system('設定選項：settings theme <green|amber|white>')
+        log.system('設定選項：settings theme <green|amber|white> | settings autosave <30s|1m|2m|5m|off>')
       }
     })
   }

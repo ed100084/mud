@@ -98,10 +98,18 @@ export function importSave(encoded: string): PlayerState | null {
 
 // 自動存檔定時器
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null
+let autoSaveGetterRef: (() => PlayerState) | null = null
 
 export function startAutoSave(getPlayer: () => PlayerState): void {
-  if (autoSaveTimer) clearInterval(autoSaveTimer)
+  autoSaveGetterRef = getPlayer
+  setAutoSaveInterval(AUTO_SAVE_INTERVAL_MS)
+}
+
+/** 動態變更自動存檔頻率（ms=0 為關閉）。需先呼叫過 startAutoSave。 */
+export function setAutoSaveInterval(ms: number): void {
+  if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null }
+  if (ms <= 0 || !autoSaveGetterRef) return
   autoSaveTimer = setInterval(() => {
-    saveGame(getPlayer(), 'Auto Save')
-  }, AUTO_SAVE_INTERVAL_MS)
+    saveGame(autoSaveGetterRef!(), 'Auto Save')
+  }, ms)
 }

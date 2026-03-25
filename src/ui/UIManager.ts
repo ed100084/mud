@@ -16,7 +16,7 @@ import { RANDOM_EVENTS, ZONES } from '../systems/adventure/AdventureSystem'
 import type { PlayerState } from '../types'
 
 type UIMode = 'default' | 'combat' | 'dungeon' | 'town' | 'event_choice' | 'dialogue'
-type PanelType = 'character' | 'inventory' | 'quests' | 'prestige' | 'shop' | 'dungeons' | 'zones' | null
+type PanelType = 'character' | 'inventory' | 'quests' | 'prestige' | 'shop' | 'dungeons' | 'zones' | 'settings' | null
 
 export class UIManager {
   private guiStatus!: HTMLElement
@@ -97,6 +97,9 @@ export class UIManager {
       </button>
       <button class="nav-tab" data-panel="prestige">
         <span class="nav-icon">✨</span><span>重生樹</span>
+      </button>
+      <button class="nav-tab" data-panel="settings">
+        <span class="nav-icon">⚙</span><span>設定</span>
       </button>
     `
     mudRoot.appendChild(this.bottomNav)
@@ -587,6 +590,7 @@ export class UIManager {
       case 'shop':      this.panelTitle.textContent = '商店';     this.buildShopPanel();      break
       case 'dungeons':  this.panelTitle.textContent = '地城選擇'; this.buildDungeonsPanel();  break
       case 'zones':     this.panelTitle.textContent = '探索區域'; this.buildZonesPanel();     break
+      case 'settings':  this.panelTitle.textContent = '遊戲設定'; this.buildSettingsPanel();  break
     }
   }
 
@@ -1000,6 +1004,56 @@ export class UIManager {
     }
 
     this.panelBody.innerHTML = html || '<div style="color:var(--text-dim)">無可用區域</div>'
+  }
+
+  // ── Settings Panel ─────────────────────────────────────────
+
+  private buildSettingsPanel(): void {
+    const p = this.getPlayer?.()
+    const currentInterval = (p?.flags['autosave_interval'] as number | undefined) ?? 60_000
+    const intervals = [
+      { label: '30 秒', ms: 30_000 },
+      { label: '1 分鐘', ms: 60_000 },
+      { label: '2 分鐘', ms: 120_000 },
+      { label: '5 分鐘', ms: 300_000 },
+      { label: '關閉',   ms: 0 },
+    ]
+    const cmdMap: Record<number, string> = {
+      30_000: '30s', 60_000: '1m', 120_000: '2m', 300_000: '5m', 0: 'off',
+    }
+    const autosaveHTML = intervals.map(opt => {
+      const active = currentInterval === opt.ms ? ' settings-opt-active' : ''
+      return `<button class="settings-opt${active}" data-cmd="settings autosave ${cmdMap[opt.ms]}">${opt.label}</button>`
+    }).join('')
+
+    const themes = [
+      { label: '綠色（預設）', key: 'green' },
+      { label: '琥珀',        key: 'amber' },
+      { label: '白色',        key: 'white' },
+    ]
+    const themeHTML = themes.map(t =>
+      `<button class="settings-opt" data-cmd="settings theme ${t.key}">${t.label}</button>`
+    ).join('')
+
+    this.panelBody.innerHTML = `
+      <div class="settings-panel">
+        <div class="settings-section">
+          <div class="settings-label">自動存檔頻率</div>
+          <div class="settings-opts">${autosaveHTML}</div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-label">介面主題</div>
+          <div class="settings-opts">${themeHTML}</div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-label">存檔操作</div>
+          <div class="settings-opts">
+            <button class="settings-opt" data-cmd="save">💾 立即存檔</button>
+            <button class="settings-opt" data-cmd="load">📂 重新讀取</button>
+          </div>
+        </div>
+      </div>
+    `
   }
 }
 
