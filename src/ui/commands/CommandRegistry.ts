@@ -12,6 +12,7 @@ export interface CommandContext {
 type CommandHandler = (args: string[], ctx: CommandContext) => void
 
 interface CommandDef {
+  verb?: string
   handler: CommandHandler
   description: string
   usage: string
@@ -662,6 +663,57 @@ registerCommand('codex', {
         log.system('圖鑑分類：codex monsters | codex jobs')
       }
     })
+  }
+})
+
+registerCommand('auto_combat', {
+  verb: 'auto_combat', aliases: ['ac'], category: 'system',
+  description: '切換自動戰鬥（需重生 5 次解鎖）',
+  usage: 'auto_combat [on|off] [strategy <attack|defend_low_hp>]',
+  handler: (args, ctx) => {
+    const p = ctx.player
+    if (!p.flags['unlock_auto_combat']) {
+      log.warning('自動戰鬥尚未解鎖（需重生 5 次）')
+      return
+    }
+    if (args[0] === 'strategy' && args[1]) {
+      p.flags['auto_combat_strategy'] = args[1]
+      log.success(`自動戰鬥策略設為：${args[1]}`)
+    } else if (args[0] === 'on') {
+      p.flags['auto_combat'] = true
+      log.success('⚡ 自動戰鬥已啟用')
+    } else if (args[0] === 'off') {
+      p.flags['auto_combat'] = false
+      log.info('⏸ 自動戰鬥已暫停')
+    } else {
+      const on = p.flags['auto_combat'] !== false
+      p.flags['auto_combat'] = !on
+      log.success(p.flags['auto_combat'] ? '⚡ 自動戰鬥已啟用' : '⏸ 自動戰鬥已暫停')
+    }
+  }
+})
+
+registerCommand('auto_explore', {
+  verb: 'auto_explore', aliases: ['ae'], category: 'system',
+  description: '切換自動探索循環（需重生 10 次解鎖）',
+  usage: 'auto_explore [on|off]',
+  handler: (args, ctx) => {
+    const p = ctx.player
+    if (!p.flags['unlock_auto_explore']) {
+      log.warning('自動探索尚未解鎖（需重生 10 次）')
+      return
+    }
+    if (args[0] === 'on') {
+      p.flags['auto_explore'] = true
+      log.success('⚡ 自動探索已啟用')
+    } else if (args[0] === 'off') {
+      p.flags['auto_explore'] = false
+      log.info('⏸ 自動探索已暫停')
+    } else {
+      const on = p.flags['auto_explore'] !== false
+      p.flags['auto_explore'] = !on
+      log.success(p.flags['auto_explore'] ? '⚡ 自動探索已啟用' : '⏸ 自動探索已暫停')
+    }
   }
 })
 

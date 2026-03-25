@@ -6,6 +6,7 @@ export interface JobStatGrowth {
   matk?: number; mdef?: number
   spd?: number; lck?: number
   crit?: number; critDmg?: number
+  dodge?: number; acc?: number
 }
 
 export interface JobRequirement {

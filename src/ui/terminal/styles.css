@@ -208,6 +208,34 @@ html, body, #app {
   border-color: #4d440a;
   color: var(--gold);
 }
+.act-btn.active-auto {
+  background: #0a1f0a;
+  border-color: #1a4d1a;
+  color: #4caf50;
+  font-size: 11px;
+}
+
+/* ── Auto Indicator ─────────────────────────────── */
+.auto-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border);
+}
+.auto-indicator.on  { color: #4caf50; }
+.auto-indicator.off { color: #888; }
+.auto-toggle-btn {
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  color: inherit;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
 
 /* ── Action Grid ───────────────────────────────── */
 .action-grid {

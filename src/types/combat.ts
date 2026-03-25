@@ -55,6 +55,8 @@ export interface CombatState {
   isActive: boolean
   isPlayerTurn: boolean
   location: string
+  floor: number
+  tier: number
 }
 
 export interface SkillDefinition {

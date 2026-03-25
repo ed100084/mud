@@ -264,8 +264,8 @@ export class UIManager {
     mpFill.style.width = `${clamp(mpPct).toFixed(1)}%`
     xpFill.style.width = `${clamp(xpPct).toFixed(1)}%`
 
-    if (hpText) hpText.textContent = `${fmtFull(p.currentHP)}/${fmtFull(maxHP)}`
-    if (mpText) mpText.textContent = `${fmtFull(p.currentMP)}/${fmtFull(maxMP)}`
+    if (hpText) hpText.textContent = `${fmt(p.currentHP)}/${fmt(maxHP)}`
+    if (mpText) mpText.textContent = `${fmt(p.currentMP)}/${fmt(maxMP)}`
     if (lvText) {
       const rb = p.rebirthCount > 0 ? ` ✦${p.rebirthCount}` : ''
       lvText.textContent = `Lv.${p.level.toFixed(0)}${rb}`
@@ -402,6 +402,18 @@ export class UIManager {
   }
 
   private buildDefaultPanel(): void {
+    const p = this.getPlayer?.()
+    const hasAutoExplore = p?.flags['unlock_auto_explore']
+    const autoExploreOn = hasAutoExplore && p?.flags['auto_explore'] !== false
+    const currentZone = p?.flags['current_zone'] as string | undefined
+
+    const autoExploreBtn = hasAutoExplore
+      ? `<button class="act-btn ${autoExploreOn ? 'active-auto' : ''}" data-cmd="${autoExploreOn ? 'auto_explore off' : 'auto_explore on'}">
+           ${autoExploreOn ? '⚡ 自動探索中' : '▶ 啟用自動探索'}
+           ${autoExploreOn && currentZone ? `<br><small>${currentZone}</small>` : ''}
+         </button>`
+      : ''
+
     this.contextPanel.innerHTML = `
       <div class="action-grid cols-3">
         <button class="act-btn primary" data-open-panel="zones">🗺 探索</button>
@@ -410,6 +422,7 @@ export class UIManager {
         <button class="act-btn" data-open-panel="character">👤 角色</button>
         <button class="act-btn" data-open-panel="prestige">✨ 重生樹</button>
         <button class="act-btn" data-cmd="save">💾 存檔</button>
+        ${autoExploreBtn}
       </div>
     `
   }
@@ -444,6 +457,7 @@ export class UIManager {
 
   private buildCombatPanel(): void {
     const combat = getActiveCombat()
+    const p = this.getPlayer?.()
     let enemyCardsHTML = ''
 
     if (combat) {
@@ -456,14 +470,24 @@ export class UIManager {
             <div class="enemy-hp-bar">
               <div class="enemy-hp-fill" id="enemy-hp-${i}" style="width:${pct.toFixed(1)}%"></div>
             </div>
-            <div class="enemy-hp-text">${fmtFull(e.currentHP)}/${fmtFull(e.maxHP)}</div>
+            <div class="enemy-hp-text">${fmt(e.currentHP)}/${fmt(e.maxHP)}</div>
           </div>
         `
       }).join('')
     }
 
+    const hasAutoCombat = p?.flags['unlock_auto_combat']
+    const autoCombatOn = hasAutoCombat && p?.flags['auto_combat'] !== false
+    const autoIndicator = hasAutoCombat
+      ? `<div class="auto-indicator ${autoCombatOn ? 'on' : 'off'}">
+           ${autoCombatOn ? '⚡ AUTO' : '⏸ 手動'}
+           <button class="auto-toggle-btn" data-cmd="${autoCombatOn ? 'auto_combat off' : 'auto_combat on'}">${autoCombatOn ? '暫停' : '啟用'}</button>
+         </div>`
+      : ''
+
     this.contextPanel.innerHTML = `
       <div class="combat-panel">
+        ${autoIndicator}
         ${enemyCardsHTML ? `<div id="enemy-cards">${enemyCardsHTML}</div>` : ''}
         <div class="action-grid cols-2">
           <button class="act-btn primary" data-cmd="attack">⚔ 攻擊</button>
