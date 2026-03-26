@@ -6,13 +6,14 @@ import { UIManager } from './ui/UIManager'
 import { executeCommand } from './ui/commands/CommandRegistry'
 import { createPlayer } from './systems/player/PlayerSystem'
 import { recalcStats } from './systems/player/StatsSystem'
-import { getEquippedItems } from './systems/equipment/EquipmentSystem'
+import { getEquippedItems, registerItem } from './systems/equipment/EquipmentSystem'
 import { saveGame, loadGame, startAutoSave } from './save/SaveManager'
 import { OFFLINE_MAX_HOURS, AUTO_EXPLORE_DELAY_MS } from './constants'
 import { D, fmt, fmtFull, toDecimal } from './core/bignum'
 import { updateQuestProgress } from './systems/npc/QuestSystem'
 import { getOfflineRate, getPrestigeXpMultiplier, getPrestigeGoldMultiplier } from './systems/prestige/PrestigeSystem'
-import type { PlayerState, StatBlock } from './types'
+import { getActiveDungeon, getCurrentRoom, markBossRoomCleared, advanceFloor } from './systems/dungeon/DungeonSystem'
+import type { PlayerState, StatBlock, Equipment } from './types'
 
 // 修復舊存檔或 HMR 後 Decimal 變成普通字串/數字的問題
 function rehydratePlayer(p: PlayerState): PlayerState {
@@ -48,6 +49,26 @@ function rehydratePlayer(p: PlayerState): PlayerState {
     totalGoldGained: td(p.playtimeStats.totalGoldGained),
     highestLevel: td(p.playtimeStats.highestLevel),
   }
+
+  // 從 itemData 重建 itemRegistry（修復讀檔後賣出物品金幣不增加的問題）
+  p.itemData = p.itemData ?? {}
+  for (const raw of Object.values(p.itemData)) {
+    const item = raw as Equipment
+    // 修復 baseStats 內的 Decimal 欄位
+    if (item.baseStats) {
+      for (const k of Object.keys(item.baseStats)) {
+        const key = k as keyof typeof item.baseStats
+        item.baseStats[key] = td(item.baseStats[key]) as never
+      }
+    }
+    item.sellPrice = td(item.sellPrice)
+    item.enchantments = (item.enchantments ?? []).map(e => ({
+      ...e,
+      flatBonus: td(e.flatBonus),
+    }))
+    registerItem(item)
+  }
+
   return p
 }
 
@@ -73,9 +94,22 @@ export class GameEngine {
     // 監聽 tick 事件
     bus.on('tick', ({ tick }) => this.onTick(tick))
 
-    // 監聽戰鬥事件：自動探索循環
+    // 監聽戰鬥事件：自動探索 + 地城 Boss 樓層推進
     bus.on('combat:end', ({ victory }) => {
       if (!victory) return
+
+      // 地城 Boss 擊殺後標記房間，顯示下一層按鈕
+      const dungeon = getActiveDungeon()
+      if (dungeon) {
+        const room = getCurrentRoom()
+        if (room?.type === 'boss') {
+          markBossRoomCleared()
+          setTimeout(() => this.uiManager.refresh(), 300)
+          return
+        }
+      }
+
+      // 自動探索循環（非地城模式）
       if (!this.player.flags['unlock_auto_explore']) return
       if (this.player.flags['auto_explore'] === false) return
       const zoneId = this.player.flags['current_zone'] as string | undefined
@@ -90,6 +124,17 @@ export class GameEngine {
 
     // 啟動自動存檔
     startAutoSave(() => this.player)
+
+    // 設定存檔面板的讀取回呼
+    this.uiManager.setLoadCallback(async (slotName) => {
+      const loaded = await loadGame(slotName)
+      if (loaded) {
+        this.player = rehydratePlayer(loaded)
+        recalcStats(this.player, getEquippedItems(this.player))
+        import('./core/logger').then(({ log }) => log.success(`已讀取存檔「${slotName}」`))
+        this.uiManager.refresh()
+      }
+    })
 
     // 顯示歡迎訊息
     this.showWelcome()

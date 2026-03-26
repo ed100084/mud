@@ -59,4 +59,5 @@ export interface TownDefinition {
   hasInn: boolean
   hasBlacksmith: boolean
   unlockLevel: number
+  innCost?: number
 }

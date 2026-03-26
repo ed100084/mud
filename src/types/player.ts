@@ -1,4 +1,5 @@
 import type Decimal from 'decimal.js'
+import type { Equipment } from './equipment'
 
 export interface StatBlock {
   hp: Decimal
@@ -87,4 +88,5 @@ export interface PlayerState {
   prestige: import('./prestige').PrestigeState
   playtimeStats: PlaytimeStats
   lastSaveTime: number
+  itemData: Record<string, Equipment>
 }

@@ -16,12 +16,47 @@ export const DUNGEON_TEMPLATES = {
     bossIds: ['goblin_king'],
     unlockQuestId: undefined,
   },
+  goblin_fortress: {
+    id: 'goblin_fortress', name: '哥布林要塞', tier: 2,
+    description: '哥布林軍閥的石造要塞，精銳部隊駐守其中。',
+    minLevel: 12, maxFloors: 15,
+    themes: ['fortress', 'goblin'],
+    bossIds: ['goblin_warlord'],
+  },
+  swamp_lair: {
+    id: 'swamp_lair', name: '沼澤巢穴', tier: 2,
+    description: '沼澤深處的神秘巢穴，詛咒能量在此濃縮。',
+    minLevel: 25, maxFloors: 20,
+    themes: ['swamp', 'undead'],
+    bossIds: ['swamp_hydra'],
+  },
+  iron_mine: {
+    id: 'iron_mine', name: '鐵礦深坑', tier: 3,
+    description: '廢棄的礦坑深處，機械構造體被邪惡能量激活。',
+    minLevel: 40, maxFloors: 25,
+    themes: ['mine', 'construct'],
+    bossIds: ['iron_titan'],
+  },
   dark_forest_dungeon: {
     id: 'dark_forest_dungeon', name: '黑暗迷林', tier: 3,
     description: '古老森林的禁地，強大的不死族在此游蕩。',
-    minLevel: 60, maxFloors: 30,
+    minLevel: 55, maxFloors: 30,
     themes: ['forest', 'undead'],
     bossIds: ['ancient_dragon'],
+  },
+  volcanic_cavern: {
+    id: 'volcanic_cavern', name: '火山熔岩窟', tier: 4,
+    description: '火山內部的熔岩洞窟，最古老的元素精靈守護著此地。',
+    minLevel: 75, maxFloors: 35,
+    themes: ['volcano', 'elemental'],
+    bossIds: ['volcano_lord'],
+  },
+  dragon_nest: {
+    id: 'dragon_nest', name: '龍族巢穴', tier: 5,
+    description: '龍族族長的神聖巢穴，傳說中的終極挑戰。',
+    minLevel: 95, maxFloors: 40,
+    themes: ['dragon', 'sacred'],
+    bossIds: ['dragon_patriarch'],
   },
 }
 
@@ -133,8 +168,56 @@ function triggerRoom(player: PlayerState, room: RoomState, dungeon: DungeonRun):
         room.isCleared = true
       }
       break
+      // ※ isCleared 由 markBossRoomCleared() 在戰鬥勝利後設定
     }
   }
+}
+
+/** 戰鬥結束後由外部（game.ts）呼叫：標記 boss 房間已清除 */
+export function markBossRoomCleared(): boolean {
+  const d = activeDungeon
+  if (!d) return false
+  const floor = d.floors[d.currentFloor - 1]
+  const room = floor?.rooms.find(r => r.id === floor.currentRoomId)
+  if (!room || room.type !== 'boss' || room.isCleared) return false
+  room.isCleared = true
+  log.success(`✦ BOSS 擊敗！你可以繼續前進至下一層。`)
+  return true
+}
+
+/** 推進到下一層（或通關地城） */
+export function advanceFloor(player: PlayerState): void {
+  const d = activeDungeon
+  if (!d) return
+  const template = (DUNGEON_TEMPLATES as Record<string, typeof DUNGEON_TEMPLATES[keyof typeof DUNGEON_TEMPLATES]>)[d.dungeonId]
+
+  // 標記目前層已完成
+  const currentFloorState = d.floors[d.currentFloor - 1]
+  if (currentFloorState) currentFloorState.isComplete = true
+  bus.emit('dungeon:floor_complete', { dungeonId: d.dungeonId, floor: d.currentFloor })
+
+  if (d.currentFloor >= d.maxFloor) {
+    // 全層通關
+    log.story(`\n★━━━━━━━━━━━━━━━━━━━━━━━━━━━━★`)
+    log.story(`   恭喜！你通關了「${template?.name ?? d.dungeonId}」！`)
+    log.story(`★━━━━━━━━━━━━━━━━━━━━━━━━━━━━━★`)
+    activeDungeon.isActive = false
+    activeDungeon = null
+    player.location = { type: 'town', id: 'starting_town' }
+    bus.emit('dungeon:cleared', { dungeonId: d.dungeonId, totalFloors: d.maxFloor })
+    return
+  }
+
+  // 生成下一層
+  const nextFloorNum = d.currentFloor + 1
+  const newFloorSeed  = d.seed ^ (nextFloorNum * 0xdeadbeef)
+  const newFloorState = generateFloor(d.dungeonId, nextFloorNum, newFloorSeed)
+  d.floors.push(newFloorState)
+  d.currentFloor = nextFloorNum
+  player.location.subId = newFloorState.currentRoomId
+
+  log.story(`\n── 第 ${nextFloorNum} 層 ─────────────────────`)
+  describeRoom(getCurrentRoom()!)
 }
 
 export function exitDungeon(player: PlayerState): void {

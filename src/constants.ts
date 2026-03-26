@@ -9,8 +9,8 @@ export const OUTPUT_BUFFER_MAX_LINES = 10_000
 export const OUTPUT_BUFFER_VISIBLE_LINES = 60
 
 // ── 等級與 XP ────────────────────────────────────────
-export const XP_BASE = new Decimal('100')
-export const XP_LEVEL_EXPONENT = 1.8
+export const XP_BASE = new Decimal('50')
+export const XP_LEVEL_EXPONENT = 1.5
 export const XP_REBIRTH_REDUCTION = 0.05   // 每次重生降低 5%
 
 // ── 重生 ────────────────────────────────────────────
@@ -47,9 +47,9 @@ export const RARITY_WEIGHTS = {
 export const SHOP_REFRESH_SECONDS = 1800  // 30 分鐘
 
 // ── 地城 ────────────────────────────────────────────
-export const DUNGEON_ROOMS_BASE = 5
-export const DUNGEON_ROOMS_PER_FLOOR = 2
-export const DUNGEON_ROOMS_MAX = 30
+export const DUNGEON_ROOMS_BASE = 20
+export const DUNGEON_ROOMS_PER_FLOOR = 5
+export const DUNGEON_ROOMS_MAX = 80
 
 // ── 同伴 ────────────────────────────────────────────
 export const MAX_COMPANIONS = 4

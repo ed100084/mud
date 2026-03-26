@@ -1,5 +1,5 @@
 import { log } from '../../core/logger'
-import { fmt, fmtFull, D } from '../../core/bignum'
+import { D, fmt, fmtFull } from '../../core/bignum'
 import { terminal } from '../terminal/Terminal'
 import type { PlayerState } from '../../types'
 
@@ -12,7 +12,6 @@ export interface CommandContext {
 type CommandHandler = (args: string[], ctx: CommandContext) => void
 
 interface CommandDef {
-  verb?: string
   handler: CommandHandler
   description: string
   usage: string
@@ -174,12 +173,13 @@ registerCommand('explore', {
       return
     }
     import('../../systems/adventure/AdventureSystem').then(({ exploreArea }) => {
-      // 若在城鎮中，預設回到新手平原；若已在冒險區，繼續同區域
+      // 若在城鎮中，預設回到新手平原；若已在冒險區，繼續同區域/小區
       const zoneId = args[0]
         || (p.location.type === 'adventure' ? p.location.id : null)
         || 'starting_plains'
       const areaId = args[1]
-      p.location = { type: 'adventure', id: zoneId }
+        || (p.location.type === 'adventure' ? p.location.subId : undefined)
+        || undefined
       exploreArea(p, zoneId, areaId)
     })
   }
@@ -389,15 +389,21 @@ registerCommand('talk', {
 
 registerCommand('inn', {
   verb: 'inn', aliases: ['rest', '旅店', '休息'], category: 'town',
-  description: '在旅店休息（20 金幣）',
+  description: '在旅店休息（費用依城鎮等級）',
   usage: 'inn',
   handler: (_args, ctx) => {
     const p = ctx.player
     if (p.location.type !== 'town') { log.warning('你不在城鎮中。'); return }
-    if (p.gold.lt(20)) { log.warning('金幣不足（需要 20 金幣）。'); return }
-    import('../../systems/player/PlayerSystem').then(({ fullRestore, spendGold }) => {
-      if (!spendGold(p, D(20))) { log.warning('金幣不足。'); return }
-      fullRestore(p)
+    import('../../systems/town/TownData').then(({ getTown }) => {
+      const town = getTown(p.location.id)
+      if (!town?.hasInn) { log.warning('這裡沒有旅店。'); return }
+      const cost = town.innCost ?? 20
+      if (p.gold.lt(cost)) { log.warning(`金幣不足（需要 ${cost} 金幣）。`); return }
+      import('../../systems/player/PlayerSystem').then(({ fullRestore, spendGold }) => {
+        spendGold(p, D(cost))
+        fullRestore(p)
+        log.success(`休息後體力完全恢復！（花費 ${cost} 金幣）`)
+      })
     })
   }
 })
@@ -456,7 +462,12 @@ registerCommand('dungeon', {
   usage: 'dungeon <地城ID> [roguelike]',
   handler: (args, ctx) => {
     if (!args[0]) {
-      log.info('可用地城：goblin_cave（哥布林洞窟）、dark_forest_dungeon（黑暗迷林）')
+      import('../../systems/dungeon/DungeonSystem').then(({ DUNGEON_TEMPLATES }) => {
+        const list = Object.values(DUNGEON_TEMPLATES)
+          .map(d => `${d.id}（${d.name} Lv.${d.minLevel}+）`)
+          .join('、')
+        log.info(`可用地城：${list}`)
+      })
       return
     }
     import('../../systems/dungeon/DungeonSystem').then(({ enterDungeon }) => {
@@ -579,6 +590,27 @@ registerCommand('exit_dungeon', {
   }
 })
 
+registerCommand('advance_floor', {
+  verb: 'advance_floor', aliases: ['next_floor', '下一層'], category: 'dungeon',
+  description: '擊敗 Boss 後前往下一層',
+  usage: 'advance_floor',
+  handler: (_args, ctx) => {
+    import('../../systems/dungeon/DungeonSystem').then(({ getActiveDungeon, getCurrentRoom, advanceFloor }) => {
+      const dungeon = getActiveDungeon()
+      const room    = getCurrentRoom()
+      if (!dungeon) {
+        import('../../core/logger').then(({ log }) => log.warning('你不在地城中。'))
+        return
+      }
+      if (!room || room.type !== 'boss' || !room.isCleared) {
+        import('../../core/logger').then(({ log }) => log.warning('必須先擊敗 Boss 才能前進下一層。'))
+        return
+      }
+      advanceFloor(ctx.player)
+    })
+  }
+})
+
 registerCommand('sell', {
   verb: 'sell', aliases: ['販售'], category: 'town',
   description: '販售物品',
@@ -663,57 +695,6 @@ registerCommand('codex', {
         log.system('圖鑑分類：codex monsters | codex jobs')
       }
     })
-  }
-})
-
-registerCommand('auto_combat', {
-  verb: 'auto_combat', aliases: ['ac'], category: 'system',
-  description: '切換自動戰鬥（需重生 5 次解鎖）',
-  usage: 'auto_combat [on|off] [strategy <attack|defend_low_hp>]',
-  handler: (args, ctx) => {
-    const p = ctx.player
-    if (!p.flags['unlock_auto_combat']) {
-      log.warning('自動戰鬥尚未解鎖（需重生 5 次）')
-      return
-    }
-    if (args[0] === 'strategy' && args[1]) {
-      p.flags['auto_combat_strategy'] = args[1]
-      log.success(`自動戰鬥策略設為：${args[1]}`)
-    } else if (args[0] === 'on') {
-      p.flags['auto_combat'] = true
-      log.success('⚡ 自動戰鬥已啟用')
-    } else if (args[0] === 'off') {
-      p.flags['auto_combat'] = false
-      log.info('⏸ 自動戰鬥已暫停')
-    } else {
-      const on = p.flags['auto_combat'] !== false
-      p.flags['auto_combat'] = !on
-      log.success(p.flags['auto_combat'] ? '⚡ 自動戰鬥已啟用' : '⏸ 自動戰鬥已暫停')
-    }
-  }
-})
-
-registerCommand('auto_explore', {
-  verb: 'auto_explore', aliases: ['ae'], category: 'system',
-  description: '切換自動探索循環（需重生 10 次解鎖）',
-  usage: 'auto_explore [on|off]',
-  handler: (args, ctx) => {
-    const p = ctx.player
-    if (!p.flags['unlock_auto_explore']) {
-      log.warning('自動探索尚未解鎖（需重生 10 次）')
-      return
-    }
-    if (args[0] === 'on') {
-      p.flags['auto_explore'] = true
-      log.success('⚡ 自動探索已啟用')
-    } else if (args[0] === 'off') {
-      p.flags['auto_explore'] = false
-      log.info('⏸ 自動探索已暫停')
-    } else {
-      const on = p.flags['auto_explore'] !== false
-      p.flags['auto_explore'] = !on
-      log.success(p.flags['auto_explore'] ? '⚡ 自動探索已啟用' : '⏸ 自動探索已暫停')
-    }
   }
 })
 

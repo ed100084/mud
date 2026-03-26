@@ -66,6 +66,7 @@ export function createPlayer(name: string): PlayerState {
       playTime: 0,
     },
     lastSaveTime: Date.now(),
+    itemData: {},
   }
 }
 

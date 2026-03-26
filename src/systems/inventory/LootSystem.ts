@@ -7,6 +7,7 @@ import { generateItem } from '../equipment/ItemGenerator'
 import { addItemToInventory } from '../equipment/EquipmentSystem'
 import { grantGold, grantXP } from '../player/PlayerSystem'
 import { grantJobXP } from '../job/JobSystem'
+import { updateQuestProgress } from '../npc/QuestSystem'
 import type { PlayerState, MonsterTemplate, Equipment } from '../../types'
 
 export interface LootResult {
@@ -46,6 +47,9 @@ export function processKillLoot(
   grantJobXP(player, xp.times(0.5).ceil())
   grantGold(player, gold)
   player.playtimeStats.totalKills = player.playtimeStats.totalKills.plus(1)
+
+  // 更新任務進度
+  updateQuestProgress(player, monster.id)
 
   // 裝備掉落
   const itemNames: string[] = []

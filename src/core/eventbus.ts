@@ -11,6 +11,7 @@ export interface GameEventMap {
   'combat:damage': { actorId: string; targetId: string; amount: string; isCrit: boolean }
   'item:obtained': { name: string; rarity: string; quantity: number }
   'quest:accepted': { questId: string; title: string }
+  'quest:ready':    { questId: string; title: string }
   'quest:complete': { questId: string; title: string }
   'companion:recruited': { name: string; type: string }
   'dungeon:floor_complete': { dungeonId: string; floor: number }

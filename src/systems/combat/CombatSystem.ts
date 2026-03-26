@@ -13,6 +13,9 @@ import type { PlayerState } from '../../types'
 import type { MonsterTemplate } from '../../types'
 
 let activeCombat: CombatState | null = null
+let currentMonsterTemplates: MonsterTemplate[] = []
+let currentFloor = 1
+let currentTier = 1
 
 export function getActiveCombat(): CombatState | null { return activeCombat }
 
@@ -88,6 +91,9 @@ export function startCombat(
   tier = 1
 ): void {
   if (activeCombat?.isActive) return
+  currentMonsterTemplates = enemies
+  currentFloor = floor
+  currentTier = tier
   const playerUnit  = createPlayerUnit(player)
   const enemyUnits  = enemies.map(e => createEnemyUnit(e, floor, tier, player.rebirthCount))
   activeCombat = {

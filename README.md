@@ -1,113 +1,181 @@
 # 異界迷城 MUD
 
-瀏覽器端**漸進式放置 RPG**，以終端機風格介面呈現，針對手機觸控優化。初期需要手動操作，隨著重生次數增加，逐步解鎖自動戰鬥、自動探索等放置功能，最終可完全掛機。
+> 無盡輪迴的傳說從此展開
 
-## 快速開始
+一款以繁體中文撰寫、可在**手機與瀏覽器**上遊玩的單人 MUD 風格 RPG。
+核心機制為**無上限重生系統**（壓力扣米）——數值可無限成長，等級沒有天花板，玩家熱愛看到龐大的數字。
 
-```bash
-npm install
-npm run dev      # 開發伺服器（預設 http://localhost:5173）
-npm run build    # 建置正式版本
-npm run preview  # 預覽建置結果
+---
+
+## 🖥️ 線上預覽
+
+![遊戲截圖](https://raw.githubusercontent.com/ed100084/mud/main/public/preview.png)
+
+```
+╔════════════════════════════════════╗
+║        ✦  異界迷城 MUD  ✦           ║
+║    無盡輪迴的傳說從此展開              ║
+╚════════════════════════════════════╝
 ```
 
-## 技術棧
+---
 
-| 項目 | 技術 |
+## ✨ 功能特色
+
+### 核心玩法
+| 系統 | 說明 |
 |------|------|
-| 語言 | TypeScript 5 |
-| 建構工具 | Vite 5 |
-| 大數運算 | Decimal.js |
-| 存檔儲存 | IndexedDB (localStorage) |
+| 🔄 **無限重生** | 達成條件後重生，保留靈魂碎片與永久加成，數值無限成長 |
+| 📈 **大數字系統** | 使用 Decimal.js，傷害/HP/XP 可達天文數字（K→M→B→T→Qa…科學記號） |
+| ⚔️ **回合制戰鬥** | 速度排序行動順序，支援爆擊/閃避/狀態異常 |
+| 🗺️ **冒險探索** | 多個區域、隨機事件、怪物遭遇 |
+| 🏰 **地城系統** | Roguelike 程序生成樓層，含戰鬥/寶箱/商店/休息/謎題/BOSS 房間 |
+| 🏙️ **城鎮系統** | 商店、旅店、公會、NPC 對話樹、任務系統 |
+| 💼 **5 階職業樹** | 新手→精英→高階→傳說→超越，每職業有獨立等級與精通獎勵 |
+| 🐾 **怪物馴服** | 戰鬥中降低怪物 HP 提高馴服機率，組建同伴隊伍 |
+| 🎒 **程序裝備** | 7 種稀有度（普通→超越），隨機前綴後綴，附魔系統 |
+| 💾 **存檔系統** | localStorage 自動存檔 + 手動存槽 + Base64 跨裝置匯出 |
+| 🌙 **離線進度** | 最多計算 24 小時離線的 XP/金幣收益 |
 
-## 遊戲系統
+### 重生樹（4 階永久升級）
+| 階 | 解鎖 | 代表加成 |
+|----|------|---------|
+| Tier 1 | 重生 1 次 | 全屬性 +5%/層、起始金幣、XP 需求減少 |
+| Tier 2 | 重生 5 次 | 攻擊/防禦倍率、幸運星 |
+| Tier 3 | 重生 20 次 | 超越（屬性指數成長）、靈魂同伴 |
+| Tier 4 | 重生 100 次 | 無限潛力、虛空行者職業、傳說回聲 |
 
-- **戰鬥** — 回合制，支援暴擊、閃避、防禦姿態、物理／魔法傷害
-- **職業** — 5 個 Tier、21 種職業（戰士→騎士→龍騎士 等分支路線），職業熟練度系統
-- **裝備** — 7 種稀有度（Common → Transcendent），隨機前後綴詞綴生成
-- **地城** — 程序生成樓層，含迷你地圖，7 種房間類型，難度隨層數提升
-- **同伴** — 最多 4 位，支援馴服野獸，分享 30% 經驗值
-- **城鎮** — 商店、旅館（20 金幣全額恢復）、NPC 對話、任務系統
-- **轉生** — 達到解鎖等級後可重生，取得靈魂碎片強化 4 Tier 轉生樹（11 個節點）
-- **離線進度** — 離線最長 24 小時，效率隨重生次數提升（50% → 90%）
+### 職業樹（5 階）
+```
+Tier 1：戰士 / 法師 / 盜賊 / 牧師 / 弓箭手 / 商人
+Tier 2：劍士 / 巫師 / 刺客 / 祭司 / 獵人 / 武僧 / 吟遊詩人
+Tier 3：騎士 / 大魔導士 / 暗影 / 主教 / 御獸師 / 死靈法師
+Tier 4：龍騎士 / 魔法宗師 / 幽靈刺客
+Tier 5：半神 / 虛空行者 / 永恆者（需重生 100 次）
+```
 
-## 放置化解鎖時間軸
+---
 
-| 重生次數 | 解鎖功能 | 說明 |
-|---------|---------|------|
-| 0 – 4 | 完整手動 RPG | 親自操作每場戰鬥 |
-| **5** | **自動戰鬥** | 戰鬥自動執行，可設定策略或隨時暫停 |
-| **10** | **自動探索循環** | 戰鬥結束後自動繼續同區域探索 |
-| **15** | 自動出售 | 自動賣出低於指定稀有度的裝備 |
-| **20** | 自動裝備 + 重生樹 Tier 3 | 自動換上更高評分的裝備 |
-| 50 | 離線效率 75% | — |
-| 100 | 重生樹 Tier 4 + 離線效率 90% | — |
-| 500 | 完全 AFK 模式 | 不需開啟瀏覽器 |
+## 📱 行動裝置 GUI
 
-## 介面操作
+情境感知操作面板，無需打字即可完整遊玩：
 
-本遊戲以**全點擊操作**為設計目標，無需鍵盤輸入：
-
-| 情境 | 操作方式 |
+| 情境 | 顯示內容 |
 |------|---------|
-| 探索區域 | 點擊 🗺 探索 → 選擇區域與子地區 |
-| 進入地城 | 點擊 ⚔ 地城 → 選擇地城卡片 |
-| 購買物品 | 點擊 🛒 商店 → 直接點「購買」 |
-| 與 NPC 對話 | 點擊 NPC 名稱 → 選項式對話樹 |
-| 轉職 | 底部「角色」標籤 → 點擊可用職業卡片 |
-| 購買轉生升級 | 底部「重生樹」標籤 → 點擊「購買」 |
-| 重生 | 重生樹面板 → 兩段確認按鈕 |
-| 戰鬥行動 | 攻擊 / 防禦 / 馴服 / 逃跑 四個大按鈕 |
-| 切換自動戰鬥 | 戰鬥面板上方 ⚡AUTO / ⏸手動 按鈕 |
-| 切換自動探索 | 主畫面「⚡ 自動探索中」按鈕 |
+| **城鎮** | 探索 / 商店 / 旅館 / NPC 對話 / 地城入口 |
+| **戰鬥中** | 敵人 HP 條（動態更新）+ 攻擊 / 防禦 / 技能 / 逃跑 / 馴服 |
+| **地城中** | D-Pad 方向鍵 + 搜索 / 地圖 / 休息 / 撤退 |
+| **事件/對話** | 自動切換為選項按鈕面板，點擊即選擇 |
 
-底部導覽列提供快速切換：**角色 / 物品欄 / 任務 / 重生樹**
+底部導覽列（常駐）：**🗺 探索 / 👤 角色 / 📦 物品 / 📋 任務 / ✨ 重生樹**
 
-## 專案結構
+---
 
+## 🚀 快速開始
+
+### 環境需求
+- Node.js 18+
+- npm 9+
+
+### 安裝與啟動
+```bash
+git clone https://github.com/ed100084/mud.git
+cd mud
+npm install
+npm run dev
+```
+
+開啟瀏覽器前往 **http://localhost:5173**
+
+### 建置正式版
+```bash
+npm run build
+# 產出在 dist/ 目錄，可直接部署到任何靜態托管服務
+```
+
+---
+
+## 🎮 遊戲指令（進階）
+
+雖然已有完整 GUI，仍可在終端機輸出區域輸入指令：
+
+```
+【導航】  explore / go n|s|e|w / town / dungeon <id>
+【戰鬥】  attack / defend / flee / tame / skill <n>
+【角色】  status / stats / inventory / equip <n> / unequip
+【職業】  jobs / changejob <id>
+【城鎮】  shop / buy <n> / sell <n> / inn / talk <npc>
+【任務】  quests / accept <id> / complete <id>
+【重生】  prestige / rebirth / confirm_rebirth / buytier <id>
+【系統】  save / settings theme <green|amber|white> / codex
+```
+
+---
+
+## 🛠️ 技術架構
+
+```
+異界迷城
+├── 建置工具    Vite 5 + TypeScript（strict mode）
+├── 大數字      Decimal.js（無限精度，自訂格式化）
+├── 儲存        localStorage（可升級至 Dexie IndexedDB）
+├── UI          原生 DOM + 自訂終端機渲染器（無框架）
+├── CSS         純手工 CSS + Custom Properties（主題切換）
+└── 亂數        Mulberry32 種子亂數（可重現的程序生成）
+```
+
+### 目錄結構
 ```
 src/
-├── core/          # 基礎工具（大數、事件匯流排、公式、亂數、計時器）
-├── types/         # TypeScript 型別定義
-├── systems/       # 遊戲系統
-│   ├── adventure/ # 冒險模式與隨機事件
-│   ├── combat/    # 戰鬥公式與邏輯（含自動戰鬥）
-│   ├── companion/ # 同伴系統
-│   ├── dungeon/   # 地城生成與迷你地圖
-│   ├── equipment/ # 裝備資料與物品生成
-│   ├── inventory/ # 庫存與戰利品
-│   ├── job/       # 職業資料與轉職邏輯
-│   ├── monster/   # 怪物資料
-│   ├── npc/       # NPC 與任務系統
-│   ├── player/    # 玩家狀態與屬性計算
-│   ├── prestige/  # 轉生資料、節點購買、里程碑
-│   └── town/      # 城鎮資料與商店
+├── core/           bignum / rng / eventbus / ticker / formula / logger
+├── types/          TypeScript 介面定義（player / job / equipment / ...）
+├── systems/
+│   ├── player/     PlayerSystem / StatsSystem / LevelSystem
+│   ├── job/        JobSystem / JobData（20 個職業）
+│   ├── combat/     CombatSystem / CombatFormulas
+│   ├── equipment/  EquipmentSystem / ItemGenerator（程序裝備）
+│   ├── adventure/  AdventureSystem / 隨機事件
+│   ├── dungeon/    DungeonSystem / FloorGenerator / MiniMap
+│   ├── town/       TownData / NPC / 商店
+│   ├── npc/        QuestSystem（6 條任務線）
+│   ├── companion/  CompanionSystem / 馴服系統
+│   ├── monster/    MonsterData（9 種怪物）
+│   └── prestige/   PrestigeSystem / 重生樹（11 節點）
 ├── ui/
-│   ├── commands/  # 指令註冊表（CommandRegistry）
-│   ├── terminal/  # 終端機輸出、顏色解析、樣式
-│   └── UIManager.ts  # 點擊式 UI 面板管理
-├── save/          # 存檔管理
-├── game.ts        # GameEngine 主迴圈（含自動探索循環）
-└── main.ts        # 進入點
+│   ├── UIManager.ts        GUI 總控制器
+│   ├── commands/           CommandRegistry（35+ 指令）
+│   └── terminal/           Terminal / OutputBuffer / ColorParser
+├── save/           SaveManager（自動存檔 + Base64 匯出）
+├── game.ts         GameEngine（主協調者）
+└── main.ts         入口點
 ```
 
-## 文字指令（進階）
+---
 
-大多數操作可透過點擊完成，也支援文字指令（桌面版）。輸入 `help` 查看完整列表：
+## 🎨 主題切換
 
-| 指令 | 說明 |
-|------|------|
-| `explore <區域ID>` | 探索指定區域 |
-| `dungeon <地城ID>` | 進入地城 |
-| `changejob <職業ID>` | 轉換職業 |
-| `inn` | 旅館休息（20 金幣） |
-| `tame` | 戰鬥中馴服怪物 |
-| `rebirth` / `confirm_rebirth` | 重生流程 |
-| `buytier <節點ID> [數量]` | 購買轉生升級 |
-| `auto_combat [on\|off\|strategy <attack\|defend_low_hp>]` | 切換自動戰鬥 |
-| `auto_explore [on\|off]` | 切換自動探索循環 |
-| `save` / `load` | 手動存檔 / 讀檔 |
+```
+settings theme green   ← 預設綠磷終端機
+settings theme amber   ← 琥珀色
+settings theme white   ← 白光
+```
 
-## 存檔
+---
 
-存檔每分鐘自動儲存至瀏覽器 IndexedDB，也可點擊底部「存檔」按鈕手動觸發。
+## 📊 數值設計
+
+| 常數 | 值 | 說明 |
+|------|----|------|
+| `TICK_MS` | 50ms | 遊戲迴圈 20 TPS |
+| `XP_LEVEL_EXPONENT` | 1.8 | XP 需求曲線指數 |
+| `XP_REBIRTH_REDUCTION` | 5%/次 | 每次重生降低 XP 需求 |
+| `OFFLINE_MAX_HOURS` | 24h | 最大離線進度計算時間 |
+| `OFFLINE_PROGRESS_RATE` | 50% | 離線收益效率 |
+| `TAME_BASE_CHANCE` | 15% | 基礎馴服機率（HP 越低越高）|
+| `PRESTIGE_UNLOCK_BASE_LEVEL` | 50 | 首次重生所需等級 |
+
+---
+
+## 📄 授權
+
+MIT License © 2025 ed100084

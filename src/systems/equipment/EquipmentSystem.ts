@@ -76,6 +76,7 @@ export function sellItem(player: PlayerState, instanceId: string): Decimal {
   const price = item.sellPrice
   player.gold = player.gold.plus(price)
   player.inventory = player.inventory.filter(i => i.instanceId !== instanceId)
+  delete player.itemData?.[instanceId]
   itemRegistry.delete(instanceId)
 
   log.loot(`賣出「${item.name}」，獲得 ${fmt(price)} 金幣`)
@@ -85,5 +86,7 @@ export function sellItem(player: PlayerState, instanceId: string): Decimal {
 // 新增物品到物品欄
 export function addItemToInventory(player: PlayerState, item: Equipment): void {
   registerItem(item)
+  player.itemData = player.itemData ?? {}
+  player.itemData[item.instanceId] = item
   player.inventory.push({ instanceId: item.instanceId, templateId: item.templateId, quantity: 1 })
 }
